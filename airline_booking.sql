@@ -10,47 +10,47 @@ create table passenger (
 	address varchar(200) not null
 );
 
-create table SeatType (
+create table seat_type (
 	id int primary key generated always as identity,
 	seat_type varchar(15) not null
 );
 
-create table PlaneType (
+create table plane_type (
 	id int primary key generated always as identity,
 	plane_name varchar(30) not null
 );
 
-create table PlaneType_SeatType (
+create table plane_type_seat_type (
 	id int primary key generated always as identity,
-	plane_type_id int not null references PlaneType(id),
-	seat_type_id int not null references SeatType(id),
+	plane_type_id int not null references plane_type(id),
+	seat_type_id int not null references seat_type(id),
 	quantity int not null
 );
 
-create table Plane (
+create table plane (
 	id int primary key generated always as identity,
-	plane_type_id int not null references PlaneType(id)
+	plane_type_id int not null references plane_type(id)
 );
 
-create table Airport (
+create table airport (
 	id int primary key generated always as identity,
 	code varchar(3) not null,
 	address varchar(200) not null
 );
 
-create table OverbookingRate (
+create table overbooking_rate (
 	id int primary key generated always as identity,
 	rate decimal(2,2) not null
 ); 
 
-create table ScheduledFlight (
+create table scheduled_flight (
 	id int primary key generated always as identity,
 	departure_time timestamp not null,
 	arrival_time timestamp not null,
-	plane_id int not null references Plane(id),
-	departure_airport_id int not null references Airport(id),
-	arrival_airport_id int not null references Airport(id),
-	overbooking_id int not null references OverbookingRate(id)
+	plane_id int not null references plane(id),
+	departure_airport_id int not null references airport(id),
+	arrival_airport_id int not null references airport(id),
+	overbooking_id int not null references overbooking_rate(id)
 );
 
 create table reservation (
@@ -74,10 +74,10 @@ create table payment (
 	constraint fk_reservation_id foreign key (reservation_id) references reservation(id)
 )
 
-create table FlightHistory (
+create table flight_history (
 	id int primary key generated always as identity,
-	scheduled_flight_id int not null references ScheduledFlight(id),
-	plane_id int not null references Plane(id),
+	scheduled_flight_id int not null references scheduled_flight(id),
+	plane_id int not null references plane(id),
 	actual_departure_time timestamp,
 	actual_arrival_time timestamp,
 	delay_interval interval
