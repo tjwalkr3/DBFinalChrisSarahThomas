@@ -1,6 +1,15 @@
 drop schema if exists airline_booking cascade;
 create schema airline_booking;
 
+create table passenger (
+	id int primary key generated always as identity,
+	passenger_name varchar(100) not null, 
+	passport_id varchar(9),
+	phone varchar(15) not null,
+	email varchar(200), 
+	address varchar(200) not null
+);
+
 create table SeatType (
 	id int primary key generated always as identity,
 	seat_type varchar(15) not null
@@ -43,6 +52,27 @@ create table ScheduledFlight (
 	arrival_airport_id int not null references Airport(id),
 	overbooking_id int not null references OverbookingRate(id)
 );
+
+create table reservation (
+	id int primary key generated always as identity,
+	seat_type_id int not null, 
+	passenger_id int not null,
+	scheduled_flight_id int not null,
+	printed_boarding_pass_at timestamp,
+	ticket_cost decimal(5,2) not null,
+	seat_number int,
+	constraint fk_seat_type_id foreign key (seat_type_id) references seat_type(id),
+	constraint fk_passenger_id foreign key (passenger_id) references passenger(id),
+	constraint fk_scheduled_flight_id foreign key (scheduled_flight_id) references scheduled_flight(id)	
+)
+
+create table payment (
+	id int primary key generated always as identity,
+	reservation_id int not null, 
+	amount decimal(5,2) not null,
+	compensation boolean not null,
+	constraint fk_reservation_id foreign key (reservation_id) references reservation(id)
+)
 
 create table FlightHistory (
 	id int primary key generated always as identity,
