@@ -40,7 +40,7 @@ create table airline_booking.airport (
 
 create table airline_booking.overbooking_rate (
 	id int primary key generated always as identity,
-	rate decimal(2,2) not null
+	rate decimal(5,2) not null
 ); 
 
 create table airline_booking.scheduled_flight (
