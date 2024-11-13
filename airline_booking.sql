@@ -22,14 +22,14 @@ create table airline_booking.plane_type (
 
 create table airline_booking.plane_type_seat_type (
 	id int primary key generated always as identity,
-	plane_type_id int not null references plane_type(id),
-	seat_type_id int not null references seat_type(id),
+	plane_type_id int not null references airline_booking.plane_type(id),
+	seat_type_id int not null references airline_booking.seat_type(id),
 	quantity int not null
 );
 
 create table airline_booking.plane (
 	id int primary key generated always as identity,
-	plane_type_id int not null references plane_type(id)
+	plane_type_id int not null references airline_booking.plane_type(id)
 );
 
 create table airline_booking.airport (
@@ -47,10 +47,10 @@ create table airline_booking.scheduled_flight (
 	id int primary key generated always as identity,
 	departure_time timestamp not null,
 	arrival_time timestamp not null,
-	plane_id int not null references plane(id),
-	departure_airport_id int not null references airport(id),
-	arrival_airport_id int not null references airport(id),
-	overbooking_id int not null references overbooking_rate(id)
+	plane_id int not null references airline_booking.plane(id),
+	departure_airport_id int not null references airline_booking.airport(id),
+	arrival_airport_id int not null references airline_booking.airport(id),
+	overbooking_id int not null references airline_booking.overbooking_rate(id)
 );
 
 create table airline_booking.reservation (
@@ -61,9 +61,9 @@ create table airline_booking.reservation (
 	printed_boarding_pass_at timestamp,
 	ticket_cost decimal(5,2) not null,
 	seat_number int,
-	constraint fk_seat_type_id foreign key (seat_type_id) references seat_type(id),
-	constraint fk_passenger_id foreign key (passenger_id) references passenger(id),
-	constraint fk_scheduled_flight_id foreign key (scheduled_flight_id) references scheduled_flight(id)	
+	constraint fk_seat_type_id foreign key (seat_type_id) references airline_booking.seat_type(id),
+	constraint fk_passenger_id foreign key (passenger_id) references airline_booking.passenger(id),
+	constraint fk_scheduled_flight_id foreign key (scheduled_flight_id) references airline_booking.scheduled_flight(id)	
 )
 
 create table airline_booking.payment (
@@ -71,13 +71,13 @@ create table airline_booking.payment (
 	reservation_id int not null, 
 	amount decimal(5,2) not null,
 	compensation boolean not null,
-	constraint fk_reservation_id foreign key (reservation_id) references reservation(id)
+	constraint fk_reservation_id foreign key (reservation_id) references airline_booking.reservation(id)
 )
 
 create table airline_booking.flight_history (
 	id int primary key generated always as identity,
-	scheduled_flight_id int not null references scheduled_flight(id),
-	plane_id int not null references plane(id),
+	scheduled_flight_id int not null references airline_booking.scheduled_flight(id),
+	plane_id int not null references airline_booking.plane(id),
 	actual_departure_time timestamp,
 	actual_arrival_time timestamp,
 	delay_interval interval
