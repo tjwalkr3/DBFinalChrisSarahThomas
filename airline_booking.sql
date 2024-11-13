@@ -1,7 +1,7 @@
 drop schema if exists airline_booking cascade;
 create schema airline_booking;
 
-create table passenger (
+create table airline_booking.passenger (
 	id int primary key generated always as identity,
 	passenger_name varchar(100) not null, 
 	passport_id varchar(9),
@@ -10,40 +10,40 @@ create table passenger (
 	address varchar(200) not null
 );
 
-create table seat_type (
+create table airline_booking.seat_type (
 	id int primary key generated always as identity,
 	seat_type varchar(15) not null
 );
 
-create table plane_type (
+create table airline_booking.plane_type (
 	id int primary key generated always as identity,
 	plane_name varchar(30) not null
 );
 
-create table plane_type_seat_type (
+create table airline_booking.plane_type_seat_type (
 	id int primary key generated always as identity,
 	plane_type_id int not null references plane_type(id),
 	seat_type_id int not null references seat_type(id),
 	quantity int not null
 );
 
-create table plane (
+create table airline_booking.plane (
 	id int primary key generated always as identity,
 	plane_type_id int not null references plane_type(id)
 );
 
-create table airport (
+create table airline_booking.airport (
 	id int primary key generated always as identity,
 	code varchar(3) not null,
 	address varchar(200) not null
 );
 
-create table overbooking_rate (
+create table airline_booking.overbooking_rate (
 	id int primary key generated always as identity,
 	rate decimal(2,2) not null
 ); 
 
-create table scheduled_flight (
+create table airline_booking.scheduled_flight (
 	id int primary key generated always as identity,
 	departure_time timestamp not null,
 	arrival_time timestamp not null,
@@ -53,7 +53,7 @@ create table scheduled_flight (
 	overbooking_id int not null references overbooking_rate(id)
 );
 
-create table reservation (
+create table airline_booking.reservation (
 	id int primary key generated always as identity,
 	seat_type_id int not null, 
 	passenger_id int not null,
@@ -66,7 +66,7 @@ create table reservation (
 	constraint fk_scheduled_flight_id foreign key (scheduled_flight_id) references scheduled_flight(id)	
 )
 
-create table payment (
+create table airline_booking.payment (
 	id int primary key generated always as identity,
 	reservation_id int not null, 
 	amount decimal(5,2) not null,
@@ -74,7 +74,7 @@ create table payment (
 	constraint fk_reservation_id foreign key (reservation_id) references reservation(id)
 )
 
-create table flight_history (
+create table airline_booking.flight_history (
 	id int primary key generated always as identity,
 	scheduled_flight_id int not null references scheduled_flight(id),
 	plane_id int not null references plane(id),
