@@ -85,3 +85,37 @@ insert into scheduled_flight (
 	('2024-08-16 00:05:00', '2024-08-16 07:15:00', 2, 10, 9, 1), -- 7hr 10min from ANC to AGS  
 	('2024-08-16 04:30:00', '2024-08-16 04:30:00', 2, 9, 5, 1), -- 1hr 45min from AGS to MDW  
 	('2024-08-16 04:30:00', '2024-08-16 04:30:00', 2, 5, 6, 1); -- 4hr from MDW to SFO
+	
+insert into airline_booking.passenger
+(passenger_name, passport_id, phone, email, address)
+values ('Thomas Jones', '123456789', '801-420-6666', 'thomas@gmail.com', '123 W 456 S, Seattle, WA'),
+		('Sarah Martin', '987654321', '123-456-7890', 'sarah@gmail.com', '321 W 654 S, Salt Lake City, UT'),
+		('Chris Young', '123789456', '666-420-6969', 'chris@gmail.com',  '222 W 222 S, Denver, CO'),
+		('Taft Allen', '111222333', '420-666-6969', 'taft@gmail.com',  '111 W 111 S, Los Angelos, CA'),
+		('Ricardo Ruiz', '333222111', '420-111-2222', 'ricardo@gmail.com', '420 Ave 666, Sanfransico, CA'),
+		('Cody Howell', '444555666', '801-420-7777', 'cody@gmail.com',  '121 W 323 S, Chicago, IL'),
+		('Nathan Howell', '777888999', '801-420-8888', 'nathan@gmail.com', '333 W 444 S, Layton, UT');
+	
+insert into reservation 
+(passenger_id, scheduled_flight_id, ticket_cost)
+values (1, 1, 200.00),
+		(2, 1, 200.00),
+		(3, 2, 150.00),
+		(6, 5, 200.00),
+		(5, 5, 150.00),
+		(7, 6, 200.00),
+		(4, 6, 250.00);
+	
+insert into seat
+(reservation_id, seat_type_id, printed_boarding_pass_at, seat_number)
+values (1, 1, '2024-08-16 02:30:00',1),
+		(1, 1, '2024-08-16 02:31:00',2)
+		(2, 1, '2024-08-16 04:53:00',3),
+		(3, 1, '2024-08-16 05:31:00',20),
+		(3, 1, '2024-08-16 05:31:00',21),
+		(4, 1, '2024-08-16 02:00:00',30),
+		(5, 1, default, default),
+		(6, 1, '2024-08-16 02:43:00', 22),
+		(7, 1, '2024-08-16 03:21:00', 11);
+
+
