@@ -84,7 +84,7 @@ create table airline_booking.seat (
 	reservation_id int not null,
 	seat_type_id int not null,
 	printed_boarding_pass_at timestamp,
-	seat_number int not null,
+	seat_number int,
 	constraint fk_ab_reservation_id foreign key (reservation_id) references airline_booking.reservation(id),
 	constraint fk_ab_seat_type_id foreign key (seat_type_id) references airline_booking.seat_type(id)
 );
