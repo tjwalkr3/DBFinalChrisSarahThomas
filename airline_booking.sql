@@ -1,3 +1,5 @@
+ 
+
 drop schema if exists airline_booking cascade;
 create schema airline_booking;
 
@@ -64,7 +66,7 @@ create table airline_booking.reservation (
 	constraint fk_seat_type_id foreign key (seat_type_id) references airline_booking.seat_type(id),
 	constraint fk_passenger_id foreign key (passenger_id) references airline_booking.passenger(id),
 	constraint fk_scheduled_flight_id foreign key (scheduled_flight_id) references airline_booking.scheduled_flight(id)	
-)
+);
 
 create table airline_booking.payment (
 	id int primary key generated always as identity,
@@ -72,7 +74,7 @@ create table airline_booking.payment (
 	amount decimal(5,2) not null,
 	compensation boolean not null,
 	constraint fk_reservation_id foreign key (reservation_id) references airline_booking.reservation(id)
-)
+);
 
 create table airline_booking.flight_history (
 	id int primary key generated always as identity,
