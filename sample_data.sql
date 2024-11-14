@@ -24,3 +24,11 @@ insert into airport(code, address) values
 	('DEN', '8500 Pena Blvd. Denver, CO 80249, US'),
 	('AGS', '1501 Aviation Way, Augusta, GA 30906, US'),
 	('ANC', '5000 W International Airport Rd, Anchorage, AK 99502, US');
+
+insert into product (concession_name, price) values
+	('Pillow', 8.16),
+	('Blanket', 6.12),
+	('Headphones', 20.99),
+	('Candy bar', 3.99),
+	('Fountain drink', 2.89),
+	('Chewing gum', 1.99);
