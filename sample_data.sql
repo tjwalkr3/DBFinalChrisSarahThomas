@@ -32,3 +32,17 @@ insert into product (concession_name, price) values
 	('Candy bar', 3.99),
 	('Fountain drink', 2.89),
 	('Chewing gum', 1.99);
+
+insert into plane_type_seat_type (plane_type_id, seat_type_id, quantity) values
+	(1, 1, 120),
+	(2, 1, 165),
+	(2, 2, 14),
+	(3, 1, 220),
+	(3, 2, 21),
+	(3, 3, 6),
+	(4, 1, 185),
+	(4, 2, 18),
+	(4, 3, 8),
+	(5, 1, 170),
+	(5, 2, 12),
+	(5, 3, 6);
