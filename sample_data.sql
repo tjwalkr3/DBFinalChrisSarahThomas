@@ -68,3 +68,20 @@ insert into plane (plane_type_id) values
 	(4),
 	(5), -- 2 Airbus A300-03 planes
 	(5);
+
+insert into scheduled_flight (
+		departure_time, 
+		arrival_time, 
+		plane_id, 
+		departure_airport_id, 
+		arrival_airport_id, 
+		overbooking_id  
+	)  values
+	-- Flights scheduled on 08/16/2024  -- Plane 1, Boeing 737-200 (only coach seats available)  
+	('2024-08-16 04:30:00', '2024-08-16 06:35:00', 1, 7, 2, 1), -- 2hr 5min from SLC to LAX  
+	('2024-08-16 06:50:00', '2024-08-16 13:00:00', 1, 2, 1, 1), -- 5hr 25min from LAX to JFK  
+	('2024-08-16 13:15:00', '2024-08-16 19:30:00', 1, 1, 3, 1), -- 6hr 15min from JFJ ti SEA  
+	-- Plane 2, Boeing 737-200 (only coach seats available)  
+	('2024-08-16 00:05:00', '2024-08-16 07:15:00', 2, 10, 9, 1), -- 7hr 10min from ANC to AGS  
+	('2024-08-16 04:30:00', '2024-08-16 04:30:00', 2, 9, 5, 1), -- 1hr 45min from AGS to MDW  
+	('2024-08-16 04:30:00', '2024-08-16 04:30:00', 2, 5, 6, 1); -- 4hr from MDW to SFO
