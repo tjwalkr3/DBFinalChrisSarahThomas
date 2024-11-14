@@ -25,14 +25,6 @@ insert into airport(code, address) values
 	('AGS', '1501 Aviation Way, Augusta, GA 30906, US'),
 	('ANC', '5000 W International Airport Rd, Anchorage, AK 99502, US');
 
-insert into product (concession_name, price) values
-	('Pillow', 8.16),
-	('Blanket', 6.12),
-	('Headphones', 20.99),
-	('Candy bar', 3.99),
-	('Fountain drink', 2.89),
-	('Chewing gum', 1.99);
-
 insert into plane_type_seat_type (plane_type_id, seat_type_id, quantity) values
 	(1, 1, 120),
 	(2, 1, 165),
@@ -113,4 +105,34 @@ values (1, 1, '2024-08-16 02:30:00',1, 1),
 		(3, 1, '2024-08-16 05:31:00',21, 7),
 		(4, 1, '2024-08-16 02:00:00',30, 6),
 		(5, 1, default, DEFAULT, default);
+	
+INSERT INTO payment
+(reservation_id, amount)
+VALUES (1, 400.00),
+		(1, 3.99),
+		(1, 5.78),
+		(2, 200.00),
+		(2, 1.99),
+		(3, 300.00),
+		(4, 200.00),
+		(5, 150.00);
+	
+insert into product (concession_name, price) values
+	('Pillow', 8.16),
+	('Blanket', 6.12),
+	('Headphones', 20.99),
+	('Candy bar', 3.99),
+	('Fountain drink', 2.89),
+	('Chewing gum', 1.99);
+		
+INSERT INTO concession_purchase
+(payment_id, seat_id)
+VALUES (2, 1),
+		(3, 2),
+		(5, 3);
 
+INSERT INTO concession_purchase_product
+(product_id, concession_purchase_id, quantity)
+VALUES (4, 1, 1),
+		(5, 2, 2),
+		(6, 3, 1);
