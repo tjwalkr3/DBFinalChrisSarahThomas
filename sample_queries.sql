@@ -22,3 +22,19 @@ inner join payment p
 on (cp.payment_id = p.id)
 group by cp.seat_id 
 order by cp.seat_id asc;
+
+-- Seats Filled Test
+SELECT
+	r.id,
+	p.passenger_name,
+	count(*)
+FROM
+passenger p
+INNER JOIN reservation r 
+ON (p.id = r.passenger_id)
+INNER JOIN seat s
+ON (r.id = s.reservation_id)
+WHERE s.printed_boarding_pass_at IS NOT NULL
+GROUP BY r.id, p.passenger_name;
+
+--

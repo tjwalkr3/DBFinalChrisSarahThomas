@@ -77,8 +77,7 @@ create table airline_booking.flight_history (
 	scheduled_flight_id int not null references airline_booking.scheduled_flight(id),
 	plane_id int not null references airline_booking.plane(id),
 	actual_departure_time timestamp,
-	actual_arrival_time timestamp,
-	delay_interval interval
+	actual_arrival_time timestamp
 );
 
 create table airline_booking.seat (

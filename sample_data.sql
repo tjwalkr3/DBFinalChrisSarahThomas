@@ -80,12 +80,12 @@ insert into scheduled_flight (
 	('2024-08-16 06:45:00', '2024-08-16 08:45:00', 2, 5, 6, 1); -- 4hr from MDW to SFO
 	
 insert into flight_history
-(scheduled_flight_id, plane_id, actual_departure_time, actual_arrival_time, delay)
-values (1, 1, '2024-08-16 04:40:00', '2024-08-16 06:45:00', '10 minutes'),
-		(2, 1, '2024-08-16 07:20:00', '2024-08-16 13:20:00', '20 minutes'),
-		(4, 2,'2024-08-16 00:15:00', '2024-08-16 07:30:00', '15 minutes'),
-		(5, 2, '2024-08-16 05:30:00', '2024-08-16 07:30:00', '1 hour'),
-		(6, 2, default, default, default);
+(scheduled_flight_id, plane_id, actual_departure_time, actual_arrival_time)
+values (1, 1, '2024-08-16 04:40:00', '2024-08-16 06:45:00'),
+		(2, 1, '2024-08-16 07:20:00', '2024-08-16 13:20:00'),
+		(4, 2,'2024-08-16 00:15:00', '2024-08-16 07:30:00'),
+		(5, 2, '2024-08-16 05:30:00', '2024-08-16 07:30:00'),
+		(6, 2, default, default);
 	
 insert into airline_booking.passenger
 (passenger_name, passport_id, phone, email, address)
@@ -103,7 +103,8 @@ values (1, 1, 200.00),
 		(2, 1, 200.00),
 		(3, 2, 150.00),
 		(6, 5, 200.00),
-		(5, 5, 150.00);
+		(5, 5, 150.00),
+		(7, 6, 200.00);
 	
 insert into airline_booking.seat
 (reservation_id, seat_type_id, printed_boarding_pass_at, seat_number, passenger_id)
@@ -111,9 +112,9 @@ values (1, 1, '2024-08-16 02:30:00',1, 1),
 		(1, 1, '2024-08-16 02:31:00',2, 4)
 		(2, 1, '2024-08-16 04:53:00',3, 2),
 		(3, 1, '2024-08-16 05:31:00',20, 3),
-		(3, 1, '2024-08-16 05:31:00',21, 7),
 		(4, 1, '2024-08-16 02:00:00',30, 6),
-		(5, 1, default, DEFAULT, default);
+		(5, 1, default, DEFAULT, default),
+		(6, 1, '2024-08-16 04:30:00', 31, 7);
 	
 INSERT INTO airline_booking.payment
 (reservation_id, amount)
@@ -122,9 +123,11 @@ VALUES (1, 400.00),
 		(1, 5.78),
 		(2, 200.00),
 		(2, 1.99),
-		(3, 300.00),
+		(3, 150.00),
 		(4, 200.00),
-		(5, 150.00);
+		(5, 150.00),
+		(6, 200.00),
+		(6, -200.00);
 	
 insert into airline_booking.product (concession_name, price) values
 	('Pillow', 8.16),
