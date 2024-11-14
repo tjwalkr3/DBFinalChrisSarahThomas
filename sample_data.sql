@@ -46,3 +46,25 @@ insert into plane_type_seat_type (plane_type_id, seat_type_id, quantity) values
 	(5, 1, 170),
 	(5, 2, 12),
 	(5, 3, 6);
+
+insert into plane (plane_type_id) values
+	(1), -- 5 Boeing 737-200 planes
+	(1),
+	(1),
+	(1),
+	(1),
+	(2), -- 5 Boeing 737-220 planes
+	(2),
+	(2),
+	(2),
+	(2),
+	(3), -- 5 Boeing 747-400 planes
+	(3),
+	(3),
+	(3),
+	(3),
+	(4), -- 3 Boeing 757-020 planes
+	(4),
+	(4),
+	(5), -- 2 Airbus A300-03 planes
+	(5);
