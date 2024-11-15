@@ -23,7 +23,7 @@ on (cp.payment_id = p.id)
 group by cp.seat_id 
 order by cp.seat_id asc;
 
--- Reservations Test 1: Get each reservation and the time each flight leaves
+-- Reservations Test 1: reservation is for a flight on a certain date/time
 select p.id as passenger_id, 
 	p.passenger_name, 
 	r.ticket_cost, 
@@ -73,7 +73,10 @@ left join seats_booked sb
 on (sf.id = sb.flight_id)
 order by flight_id asc;
 
--- Flight Revenue Efficiency Test 1
+-- Passengers who print a boarding pass are guaranteed a seat.
+-- Missing, still need to implement
+
+-- Flight Revenue efficiency (% seats sold, % overbooking reservations paid out )
 with total_seats as (
 	select pt.plane_name,
 		ptst.plane_type_id,
@@ -147,4 +150,25 @@ create or replace function flight_estimate(startdate date) returns decimal(5,2) 
 $$ language plpgsql;
 
 select flight_estimate('08-21-24');
+
+-- Flight performance efficiency (% flights on time, % flights canceled)
+with flight_counts as (
+	select 
+		count(*) as total_flights,
+		sum(case 
+				when fh.actual_departure_time is null and fh.actual_arrival_time is null then 1 
+				else 0 
+			end
+		) as canceled_flights,
+		sum(case 
+				when fh.actual_departure_time is not null and fh.actual_arrival_time is not null then 1  
+				else 0 
+			end
+		) as on_time_flights
+	from flight_history fh
+)
+select 
+	(coalesce(on_time_flights, 0) * 100.0 / coalesce(total_flights, 1)) as percent_flights_on_time,
+	(coalesce(canceled_flights, 0) * 100.0 / coalesce(total_flights, 1)) as percent_flights_canceled
+from flight_counts;
 
