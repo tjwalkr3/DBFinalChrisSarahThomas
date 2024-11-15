@@ -23,20 +23,6 @@ on (cp.payment_id = p.id)
 group by cp.seat_id 
 order by cp.seat_id asc;
 
--- Seats Filled Test
-SELECT
-	r.id,
-	p.passenger_name,
-	count(*)
-FROM
-passenger p
-INNER JOIN reservation r 
-ON (p.id = r.passenger_id)
-INNER JOIN seat s
-ON (r.id = s.reservation_id)
-WHERE s.printed_boarding_pass_at IS NOT NULL
-GROUP BY r.id, p.passenger_name;
-
 -- Reservations Test 1: Get each reservation and the time each flight leaves
 select p.id as passenger_id, 
 	p.passenger_name, 
@@ -76,12 +62,13 @@ with total_seats as (
 	where s.printed_boarding_pass_at is not null
 	group by p.plane_type_id, sf.id
 )
-select sb.flight_id,
-	CASE
-	  WHEN (sb.num_booked / ts.num_seats) < 1 THEN 0
-	ELSE
-	  (1 - (sb.num_booked / ts.num_seats)) * 100
-	end as percent_overbooked
-from total_seats ts
-inner join seats_booked sb
-on (ts.plane_type_id = sb.plane_type_id);
+select sf.id as flight_id,
+	(cast(coalesce(sb.num_booked, 0) as float) / cast(ts.num_seats as float)) * 100 as percent_booked
+from scheduled_flight sf
+inner join plane p
+on (sf.plane_id = p.id)
+inner join total_seats ts
+on (ts.plane_type_id = p.plane_type_id)
+left join seats_booked sb
+on (sf.id = sb.flight_id)
+order by flight_id asc;
