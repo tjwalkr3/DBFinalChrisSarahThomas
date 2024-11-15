@@ -77,7 +77,10 @@ insert into scheduled_flight (
 	-- Plane 2, Boeing 737-200 (only coach seats available)  
 	('2024-08-16 00:05:00', '2024-08-16 07:15:00', 2, 10, 9, 1), -- 7hr 10min from ANC to AGS  
 	('2024-08-16 04:30:00', '2024-08-16 06:30:00', 2, 9, 5, 1), -- 1hr 45min from AGS to MDW  
-	('2024-08-16 06:45:00', '2024-08-16 08:45:00', 2, 5, 6, 1); -- 4hr from MDW to SFO
+	('2024-08-16 06:45:00', '2024-08-16 08:45:00', 2, 5, 6, 1),-- 4hr from MDW to SFO
+	('2024-08-21 04:30:00', '2024-08-21 06:30:00', 1, 7, 2, 1),
+	('2024-08-21 07:00:00', '2024-08-21 9:00:00', 1, 2, 3, 1),
+	('2024-08-22 04:30:00', '2024-08-22 06:30:00', 2, 3, 5, 1);
 	
 insert into flight_history
 (scheduled_flight_id, plane_id, actual_departure_time, actual_arrival_time)
@@ -104,7 +107,12 @@ values (1, 1, 200.00),
 		(3, 2, 150.00),
 		(6, 5, 200.00),
 		(5, 5, 150.00),
-		(7, 6, 200.00);
+		(7, 6, 200.00),
+		(1, 7, 200.00),
+		(2, 7, 200.00),
+		(5, 8, 150.00),
+		(7, 9, 200.00),
+		(6, 9, 200.00);
 	
 insert into airline_booking.seat
 (reservation_id, seat_type_id, printed_boarding_pass_at, seat_number, passenger_id)
@@ -127,8 +135,13 @@ VALUES (1, 400.00),
 		(4, 200.00),
 		(5, 150.00),
 		(6, 200.00),
-		(6, -200.00);
-	
+		(6, -200.00),
+		(7, 200.00),
+		(8, 200.00),
+		(9, 150.00),
+		(10, 200.00),
+		(11, 200.00);
+		
 insert into airline_booking.product (concession_name, price) values
 	('Pillow', 8.16),
 	('Blanket', 6.12),
