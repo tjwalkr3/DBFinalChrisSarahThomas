@@ -126,3 +126,25 @@ on (sf.id = sb.flight_id)
 left join overbooked_paid op
 on (sf.id = op.flight_id)
 order by flight_id asc;
+
+-- Flight Estimations Query/Function
+create or replace function flight_estimate(startdate date) returns decimal(5,2) as $$
+	declare
+		revenue decimal(5,2) := 0.00;
+	begin
+		select
+			sum(p.amount) into revenue
+		from airline_booking.scheduled_flight sf
+		inner join airline_booking.reservation r
+		on (sf.id = r.scheduled_flight_id)
+		inner join airline_booking.payment p
+		on (r.id = p.reservation_id)
+		where sf.departure_time >= flight_estimate.startdate
+		and sf.arrival_time < (select date_add(startdate, interval '10 day'));
+ 
+		return revenue;
+	end;
+$$ language plpgsql;
+
+select flight_estimate('08-21-24');
+
