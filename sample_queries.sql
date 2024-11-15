@@ -74,7 +74,37 @@ on (sf.id = sb.flight_id)
 order by flight_id asc;
 
 -- Passengers who print a boarding pass are guaranteed a seat.
--- Missing, still need to implement
+with with_boarding_pass as (
+    select
+        r.id as reservation_id,
+        p.passenger_name,
+        count(*) as num_assigned_seats,
+        true as has_boarding_pass
+    from passenger p
+    inner join reservation r 
+        on p.id = r.passenger_id
+    inner join seat s
+        on r.id = s.reservation_id
+    where s.printed_boarding_pass_at is not null
+    group by r.id, p.passenger_name
+), without_boarding_pass as (
+    select
+        r.id as reservation_id,
+        p.passenger_name,
+        0 as num_assigned_seats,
+        false as printed_boarding_pass
+    from passenger p
+    inner join reservation r 
+        on p.id = r.passenger_id
+    inner join seat s
+        on r.id = s.reservation_id
+    where s.printed_boarding_pass_at is null
+      and s.seat_number is null
+)
+select * from with_boarding_pass
+union all
+select * from without_boarding_pass
+order by reservation_id asc;
 
 -- Flight Revenue efficiency (% seats sold, % overbooking reservations paid out )
 with total_seats as (
