@@ -161,24 +161,31 @@ on (sf.id = op.flight_id)
 order by flight_id asc;
 
 -- Flight Estimations Query/Function
-create or replace function flight_estimate(startdate date) returns table(start_date date, end_date date, revenue decimal(5,2)) as $$
-	begin
-		return query select
-			(select min(departure_time)::date from airline_booking.scheduled_flight 
-				where departure_time >= flight_estimate.startdate) as start_date,
-			(select date_add(startdate, interval '10 day'))::timestamp::date as end_date,
-			sum(p.amount)::decimal(5,2) as revenue
-		from airline_booking.scheduled_flight sf
-		inner join airline_booking.reservation r
-		on (sf.id = r.scheduled_flight_id)
-		inner join airline_booking.payment p
-		on (r.id = p.reservation_id)
-		where sf.departure_time >= flight_estimate.startdate
-		and sf.arrival_time < (select date_add(startdate, interval '10 day'));
-	end;
+create or replace function flight_estimate(startdate date) 
+returns table(start_date date, end_date date, revenue decimal(5,2)) as $$
+begin
+    return query 
+    select
+        (select min(departure_time)::date 
+         from airline_booking.scheduled_flight 
+         where departure_time >= flight_estimate.startdate) as start_date,
+
+        (startdate + interval '10 days')::date as end_date,
+
+        sum(p.amount)::decimal(5,2) as revenue
+    from airline_booking.scheduled_flight sf
+    inner join airline_booking.reservation r
+        on sf.id = r.scheduled_flight_id
+    inner join airline_booking.payment p
+        on r.id = p.reservation_id
+    where sf.departure_time >= flight_estimate.startdate
+      and sf.arrival_time < (startdate + interval '10 days')
+    group by start_date, end_date; -- Group by to return correct aggregates
+end;
 $$ language plpgsql;
 
-select flight_estimate('08-21-24');
+
+select * from flight_estimate('08-21-24');
 
 -- Flight performance efficiency (% flights on time, % flights canceled)
 with flight_counts as (
