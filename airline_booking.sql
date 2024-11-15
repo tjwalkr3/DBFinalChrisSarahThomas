@@ -68,7 +68,6 @@ create table airline_booking.payment (
 	id int primary key generated always as identity,
 	reservation_id int not null, 
 	amount decimal(5,2) not null,
-	compensation boolean not null,
 	constraint fk_reservation_id foreign key (reservation_id) references airline_booking.reservation(id)
 );
 
