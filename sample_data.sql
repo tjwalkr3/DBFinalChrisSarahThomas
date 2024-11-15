@@ -1,5 +1,5 @@
-INSERT INTO airline_booking.plane_type (plane_name) VALUES
-    ('Boeing 737-200'),
+INSERT INTO airline_booking.plane_type (plane_name) values 
+	('Boeing 737-200'),
     ('Boeing 737-220'),
     ('Boeing 747-400'),
     ('Boeing 757-020'),
@@ -61,14 +61,14 @@ INSERT INTO airline_booking.plane (plane_type_id) VALUES
     (5), -- 2 Airbus A300-03 planes
     (5);
 
-insert into scheduled_flight (
-		departure_time, 
-		arrival_time, 
-		plane_id, 
-		departure_airport_id, 
+insert into airline_booking.scheduled_flight (
+		departure_time,
+		arrival_time,
+		plane_id,
+		departure_airport_id,
 		arrival_airport_id, 
-		overbooking_id  
-	)  values
+		overbooking_id
+	) values
 	-- Flights scheduled on 08/16/2024  
 	-- Plane 1, Boeing 737-200 (only coach seats available)  
 	('2024-08-16 04:30:00', '2024-08-16 06:35:00', 1, 7, 2, 1), -- 2hr 5min from SLC to LAX  
