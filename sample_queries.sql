@@ -72,3 +72,57 @@ on (ts.plane_type_id = p.plane_type_id)
 left join seats_booked sb
 on (sf.id = sb.flight_id)
 order by flight_id asc;
+
+-- Flight Revenue Efficiency Test 1
+with total_seats as (
+	select pt.plane_name,
+		ptst.plane_type_id,
+		sum(ptst.quantity) as num_seats 
+	from plane_type_seat_type ptst
+	inner join seat_type st
+	on (ptst.seat_type_id = st.id)
+	inner join plane_type pt
+	on (ptst.plane_type_id = pt.id)
+	group by pt.plane_name, ptst.plane_type_id
+), seats_booked as (
+	select p.plane_type_id,
+		sf.id as flight_id,
+		count(*) as num_booked
+	from seat s
+	inner join reservation r
+	on (s.reservation_id = r.id)
+	inner join scheduled_flight sf 
+	on (r.scheduled_flight_id = sf.id)
+	inner join plane p 
+	on (sf.plane_id = p.id)
+	where s.printed_boarding_pass_at is not null
+	group by p.plane_type_id, sf.id
+), overbooked_paid as (
+	select sf.id as flight_id,
+		count(*) as overbooked_paid_out
+	from reservation r
+	inner join scheduled_flight sf 
+	on (r.scheduled_flight_id = sf.id)
+	inner join payment pay
+	on (r.id = pay.reservation_id and pay.amount < 0) -- Negative payment indicates compensation
+	group by sf.id
+)
+select sf.id as flight_id,
+	-- Calculate % Seats Sold
+	coalesce(
+		(cast(coalesce(sb.num_booked, 0) as float) / cast(ts.num_seats as float)) * 100, 0
+	) as percent_seats_sold,
+	-- Calculate % Overbooking Reservations Paid Out
+	coalesce(
+		(cast(coalesce(op.overbooked_paid_out, 0) as float) / cast(sb.num_booked as float)) * 100, 0
+	) as percent_passengers_refunded
+from scheduled_flight sf
+inner join plane p
+on (sf.plane_id = p.id)
+inner join total_seats ts
+on (ts.plane_type_id = p.plane_type_id)
+left join seats_booked sb
+on (sf.id = sb.flight_id)
+left join overbooked_paid op
+on (sf.id = op.flight_id)
+order by flight_id asc;
