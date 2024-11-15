@@ -162,22 +162,19 @@ order by flight_id asc;
 
 -- Flight Estimations Query/Function
 create or replace function flight_estimate(startdate date) returns table(start_date date, end_date date, revenue decimal(5,2)) as $$
-	declare
-		revenue decimal(5,2) := 0.00;
-		enddate date;
 	begin
-		select date_add(startdate, interval '10 day') into enddate;
-		select
-			sum(p.amount) into revenue
+		return query select
+			(select min(departure_time)::date from airline_booking.scheduled_flight 
+				where departure_time >= flight_estimate.startdate) as start_date,
+			(select date_add(startdate, interval '10 day'))::timestamp::date as end_date,
+			sum(p.amount)::decimal(5,2) as revenue
 		from airline_booking.scheduled_flight sf
 		inner join airline_booking.reservation r
 		on (sf.id = r.scheduled_flight_id)
 		inner join airline_booking.payment p
 		on (r.id = p.reservation_id)
 		where sf.departure_time >= flight_estimate.startdate
-		and sf.arrival_time < enddate;
- 
-		return query (select startdate, enddate, revenue);
+		and sf.arrival_time < (select date_add(startdate, interval '10 day'));
 	end;
 $$ language plpgsql;
 
