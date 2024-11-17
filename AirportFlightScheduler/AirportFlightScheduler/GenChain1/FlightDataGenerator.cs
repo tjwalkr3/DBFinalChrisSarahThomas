@@ -112,6 +112,7 @@ public class FlightDataGenerator
                     PlaneId = plane.Id,
                     DepartureAirportId = randomAirportPair.Item1,
                     ArrivalAirportId = randomAirportPair.Item2,
+                    OverbookingId = _context.OverbookingRates.Single().Id
                 });
 
                 // Update the plane's current location to the arrival airport
@@ -260,7 +261,7 @@ public class FlightDataGenerator
 
 
     // Given a list of reservationIDs, generate all the necessary payments in the payment table
-    public async Task<List<int>> GeneratePayments(List<int> reservationIds)
+    private async Task<List<int>> GeneratePayments(List<int> reservationIds)
     {
         var reservations = _context.Reservations
             .Where(r => reservationIds.Contains(r.Id))

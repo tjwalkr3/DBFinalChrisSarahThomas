@@ -1,16 +1,12 @@
 ﻿// Main driver for console creation of queries to insert into scheduled_flight
 using Microsoft.Extensions.Configuration;
-using AirportFlightScheduler;
 using Microsoft.EntityFrameworkCore;
 using AirportFlightScheduler.Data;
-using System.Security.Cryptography.X509Certificates;
-using System.Runtime.CompilerServices;
-using System.Linq.Expressions;
 using AirportFlightScheduler.GenChain1;
 
 public class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
         AirlineContext context;
 
@@ -21,17 +17,13 @@ public class Program
             var connectionString = configuration.GetConnectionString("DefaultConnection");
             var options = new DbContextOptionsBuilder<AirlineContext>().UseNpgsql(connectionString).Options;
             context = new AirlineContext(options);
-            Console.WriteLine($"DBContext successfully created with connection string: \n{connectionString}");
+            Console.WriteLine($"DBContext successfully created with connection string: \n{connectionString}\n");
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.ToString());
             return;
         }
-
-        string prompt = "What data generation chain would you like to generate data for?\n" + 
-            "1. data generation chain 1" +
-            "2. data generation chain 2";
 
         // Ask which entry path the user wants to 
         string DataGenChain = GetValidInput(new List<string> { "1", "2" }, prompt: "Which data generation chain? [1, 2]");
@@ -40,13 +32,16 @@ public class Program
         {
             case "1":
                 FlightDataGenerator generator = new(context);
-                return;
+                Console.WriteLine("Generating data...");
+                await generator.GenerateAllData();
+                Console.WriteLine("Done.");
+                break;
             case "2":
                 // code block
-                return;
+                break;
             default:
                 Console.WriteLine("Invalid choice");
-                return;
+                break;
         }
 
 
@@ -81,11 +76,11 @@ public class Program
     {
         string invalidInputMsg = "Sorry, invalid input. Please try again.";
         Console.WriteLine(prompt);
-        string userInput = Console.ReadLine();
+        string? userInput = Console.ReadLine();
 
         if (isCaseSensitive)
         {
-            while (!validInputs.Contains(userInput))
+            while (userInput == null || !validInputs.Contains(userInput))
             {
                 Console.WriteLine(invalidInputMsg);
                 Console.WriteLine(prompt);
@@ -96,7 +91,7 @@ public class Program
 
         // This code is only run for non-case-sensitive inputs
         List<string> lowercaseValidInputs = validInputs.ConvertAll(item => item.ToLower());
-        while (!lowercaseValidInputs.Contains(userInput))
+        while (userInput == null || !lowercaseValidInputs.Contains(userInput))
         {
             Console.WriteLine(invalidInputMsg);
             Console.WriteLine(prompt);

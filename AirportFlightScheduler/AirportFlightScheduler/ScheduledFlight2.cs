@@ -88,5 +88,12 @@ public class ScheduledFlight2
     }
 
     private DateTime startTime;
-    public DateTime StartTime { get; set; }
+    public DateTime StartTime
+    {
+        get => startTime;
+        set
+        {
+            startTime = value;
+        }
+    }
 }
