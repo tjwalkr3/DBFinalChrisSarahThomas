@@ -6,6 +6,7 @@ using AirportFlightScheduler.Data;
 using System.Security.Cryptography.X509Certificates;
 using System.Runtime.CompilerServices;
 using System.Linq.Expressions;
+using AirportFlightScheduler.GenChain1;
 
 public class Program
 {
@@ -27,30 +28,18 @@ public class Program
             Console.WriteLine(ex.ToString());
             return;
         }
-        
-
-        bool batch = true;
-        int planeId = 0;
 
         string prompt = "What data generation chain would you like to generate data for?\n" + 
             "1. data generation chain 1" +
             "2. data generation chain 2";
 
         // Ask which entry path the user wants to 
-        string DataGenChain = GetValidInput(new List<string> { "1", "2" }, prompt: "Which data generation chain?");
-
-        int numRows = -1;
-        do
-        {
-            Console.WriteLine("How many rows do you want to generate? [0-2147483647]");
-            string numRowsString = Console.ReadLine();
-            bool parsed = int.TryParse(numRowsString, out numRows);
-        } while (numRows < 1);
+        string DataGenChain = GetValidInput(new List<string> { "1", "2" }, prompt: "Which data generation chain? [1, 2]");
 
         switch (DataGenChain)
         {
             case "1":
-                // code block
+                FlightDataGenerator generator = new(context);
                 return;
             case "2":
                 // code block
@@ -59,6 +48,10 @@ public class Program
                 Console.WriteLine("Invalid choice");
                 return;
         }
+
+
+        //bool batch = true;
+        //int planeId = 0;
 
         //// Ask whether the user wants to create a batch insert query
         //DataGenChain = GetValidInput(new List<string> { "y", "n" }, prompt: "Batch? (y/n)");
@@ -70,13 +63,13 @@ public class Program
         //// Get plane ID
         //string planeIdPrompt = $"Please enter a valid plane ID (should be between 1 and {Constants.ValidPlaneIds.Count}).";
         //DataGenChain = GetValidInput(Constants.ValidPlaneIds.ConvertAll<string>(id =>id.ToString()), planeIdPrompt);
-    
+
         //// set the plane ID
         //try { planeId = Int32.Parse(DataGenChain); }
         //// if the catch block ever gets hit it would most likely be due to integer overflow, but I don't know how it could happen given how input is being retrieved via GetValidInput
         //catch { Console.WriteLine("There was an error parsing the plane ID. Please contact the developer."); throw new Exception(); } 
 
-    
+
     }
 
     /// < summary >

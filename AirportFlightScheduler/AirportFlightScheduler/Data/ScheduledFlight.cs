@@ -19,9 +19,9 @@ public partial class ScheduledFlight
 
     public int OverbookingId { get; set; }
 
-    public virtual AirlineContext ArrivalAirport { get; set; } = null!;
+    public virtual Airport ArrivalAirport { get; set; } = null!;
 
-    public virtual AirlineContext DepartureAirport { get; set; } = null!;
+    public virtual Airport DepartureAirport { get; set; } = null!;
 
     public virtual ICollection<FlightHistory> FlightHistories { get; set; } = new List<FlightHistory>();
 

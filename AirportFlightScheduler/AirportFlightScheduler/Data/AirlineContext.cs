@@ -15,7 +15,7 @@ public partial class AirlineContext : DbContext
     {
     }
 
-    public virtual DbSet<AirlineContext> Airports { get; set; }
+    public virtual DbSet<Airport> Airports { get; set; }
 
     public virtual DbSet<ConcessionPurchase> ConcessionPurchases { get; set; }
 
@@ -47,11 +47,13 @@ public partial class AirlineContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<AirlineContext>(entity =>
+        modelBuilder.HasPostgresExtension("btree_gist");
+
+        modelBuilder.Entity<Airport>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("airport_pkey");
 
-            entity.ToTable("airport", "airline_booking");
+            entity.ToTable("airport", "airline_booking2");
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -68,7 +70,7 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("concession_purchase_pkey");
 
-            entity.ToTable("concession_purchase", "airline_booking");
+            entity.ToTable("concession_purchase", "airline_booking2");
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -91,7 +93,7 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("concession_purchase_product_pkey");
 
-            entity.ToTable("concession_purchase_product", "airline_booking");
+            entity.ToTable("concession_purchase_product", "airline_booking2");
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -115,7 +117,7 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("flight_history_pkey");
 
-            entity.ToTable("flight_history", "airline_booking");
+            entity.ToTable("flight_history", "airline_booking2");
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -144,7 +146,9 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("overbooking_rate_pkey");
 
-            entity.ToTable("overbooking_rate", "airline_booking");
+            entity.ToTable("overbooking_rate", "airline_booking2");
+
+            entity.HasIndex(e => e.Rate, "overbooking_rate_rate_key").IsUnique();
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -158,7 +162,7 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("passenger_pkey");
 
-            entity.ToTable("passenger", "airline_booking");
+            entity.ToTable("passenger", "airline_booking2");
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -184,7 +188,7 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("payment_pkey");
 
-            entity.ToTable("payment", "airline_booking");
+            entity.ToTable("payment", "airline_booking2");
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -204,7 +208,7 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("plane_pkey");
 
-            entity.ToTable("plane", "airline_booking");
+            entity.ToTable("plane", "airline_booking2");
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -221,7 +225,9 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("plane_type_pkey");
 
-            entity.ToTable("plane_type", "airline_booking");
+            entity.ToTable("plane_type", "airline_booking2");
+
+            entity.HasIndex(e => e.PlaneName, "plane_type_plane_name_key").IsUnique();
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -235,7 +241,7 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("plane_type_seat_type_pkey");
 
-            entity.ToTable("plane_type_seat_type", "airline_booking");
+            entity.ToTable("plane_type_seat_type", "airline_booking2");
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -259,7 +265,9 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("product_pkey");
 
-            entity.ToTable("product", "airline_booking");
+            entity.ToTable("product", "airline_booking2");
+
+            entity.HasIndex(e => e.ConcessionName, "product_concession_name_key").IsUnique();
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -276,7 +284,7 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("reservation_pkey");
 
-            entity.ToTable("reservation", "airline_booking");
+            entity.ToTable("reservation", "airline_booking2");
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -302,7 +310,7 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("scheduled_flight_pkey");
 
-            entity.ToTable("scheduled_flight", "airline_booking");
+            entity.ToTable("scheduled_flight", "airline_booking2");
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -343,7 +351,7 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("seat_pkey");
 
-            entity.ToTable("seat", "airline_booking");
+            entity.ToTable("seat", "airline_booking2");
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
@@ -371,7 +379,9 @@ public partial class AirlineContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("seat_type_pkey");
 
-            entity.ToTable("seat_type", "airline_booking");
+            entity.ToTable("seat_type", "airline_booking2");
+
+            entity.HasIndex(e => e.SeatType1, "seat_type_seat_type_key").IsUnique();
 
             entity.Property(e => e.Id)
                 .UseIdentityAlwaysColumn()
