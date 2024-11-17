@@ -61,33 +61,23 @@ INSERT INTO airline_booking.plane (plane_type_id) VALUES
     (5), -- 2 Airbus A300-03 planes
     (5);
 
-insert into airline_booking.scheduled_flight (
-		departure_time,
-		arrival_time,
-		plane_id,
-		departure_airport_id,
-		arrival_airport_id, 
-		overbooking_id
-	) values
-	-- Flights scheduled on 08/16/2024  
-	-- Plane 1, Boeing 737-200 (only coach seats available)  
-	('2024-08-16 04:30:00', '2024-08-16 06:35:00', 1, 7, 2, 1), -- 2hr 5min from SLC to LAX  
-	('2024-08-16 06:50:00', '2024-08-16 13:00:00', 1, 2, 1, 1), -- 5hr 25min from LAX to JFK  
-	('2024-08-16 13:15:00', '2024-08-16 19:30:00', 1, 1, 3, 1), -- 6hr 15min from JFJ ti SEA  
-	-- Plane 2, Boeing 737-200 (only coach seats available)  
-	('2024-08-16 00:05:00', '2024-08-16 07:15:00', 2, 10, 9, 1), -- 7hr 10min from ANC to AGS  
-	('2024-08-16 04:30:00', '2024-08-16 06:30:00', 2, 9, 5, 1), -- 1hr 45min from AGS to MDW  
-	('2024-08-16 06:45:00', '2024-08-16 08:45:00', 2, 5, 6, 1),-- 4hr from MDW to SFO
-	('2024-08-21 04:30:00', '2024-08-21 06:30:00', 1, 7, 2, 1),
-	('2024-08-21 07:00:00', '2024-08-21 9:00:00', 1, 2, 3, 1),
-	('2024-08-22 04:30:00', '2024-08-22 06:30:00', 2, 3, 5, 1);
+INSERT INTO airline_booking.scheduled_flight (departure_time,arrival_time,plane_id,departure_airport_id,arrival_airport_id,overbooking_id) VALUES
+	 ('2024-08-16 04:30:00','2024-08-16 06:35:00',1,7,2,1),
+	 ('2024-08-16 06:50:00','2024-08-16 13:00:00',1,2,1,1),
+	 ('2024-08-16 13:15:00','2024-08-16 19:30:00',1,1,3,1),
+	 ('2024-08-21 07:00:00','2024-08-21 09:00:00',1,2,3,1),
+	 ('2024-08-22 04:30:00','2024-08-22 06:30:00',2,3,5,1),
+	 ('2024-08-16 07:30:00','2024-08-16 09:30:00',2,10,9,1),
+	 ('2024-08-16 09:45:00','2024-08-16 12:00:00',2,9,5,1),
+	 ('2024-08-16 12:15:00','2024-08-16 14:15:00',2,5,6,1),
+	 ('2024-08-21 09:45:00','2024-08-21 11:45:00',1,3,2,1);
 
-INSERT INTO airline_booking.flight_history (scheduled_flight_id, plane_id, actual_departure_time, actual_arrival_time) VALUES 
-    (1, 1, '2024-08-16 04:40:00', '2024-08-16 06:45:00'),
-    (2, 1, '2024-08-16 07:20:00', '2024-08-16 13:20:00'),
-    (4, 2, '2024-08-16 00:15:00', '2024-08-16 07:30:00'),
-    (5, 2, '2024-08-16 05:30:00', '2024-08-16 07:30:00'),
-    (6, 2, DEFAULT, DEFAULT);
+INSERT INTO airline_booking.flight_history (scheduled_flight_id,plane_id,actual_departure_time,actual_arrival_time) VALUES
+	 (1,1,'2024-08-16 04:40:00','2024-08-16 06:45:00'),
+	 (2,1,'2024-08-16 07:20:00','2024-08-16 13:20:00'),
+	 (4,2,'2024-08-16 00:15:00','2024-08-16 07:30:00'),
+	 (5,2,'2024-08-16 05:30:00','2024-08-16 07:30:00'),
+	 (6,2,NULL,NULL);
    
 INSERT INTO airline_booking.passenger (passenger_name, passport_id, phone, email, address) VALUES 
     ('Thomas Jones', '123456789', '801-420-6666', 'thomas@gmail.com', '123 W 456 S, Seattle, WA'),
@@ -138,14 +128,6 @@ VALUES (1, 400.00),
 		(9, 150.00),
 		(10, 200.00),
 		(11, 200.00);
-		
-insert into airline_booking.product (concession_name, price) values
-	('Pillow', 8.16),
-	('Blanket', 6.12),
-	('Headphones', 20.99),
-	('Candy bar', 3.99),
-	('Fountain drink', 2.89),
-	('Chewing gum', 1.99);
 
 INSERT INTO airline_booking.product (concession_name, price) VALUES
     ('Pillow', 8.16),
