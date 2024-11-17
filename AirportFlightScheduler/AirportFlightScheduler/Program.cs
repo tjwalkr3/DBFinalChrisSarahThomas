@@ -3,49 +3,78 @@ using Microsoft.Extensions.Configuration;
 using AirportFlightScheduler;
 using Microsoft.EntityFrameworkCore;
 using AirportFlightScheduler.Data;
+using System.Security.Cryptography.X509Certificates;
+using System.Runtime.CompilerServices;
+using System.Linq.Expressions;
 
 public class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("Hello, world!");
+        AirlineContext context;
 
-        // Load configuration (including User Secrets)
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets<Program>() // Enable User Secrets
-            .Build();
+        // Initialize DBContext object
+        try
+        {
+            var configuration = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var options = new DbContextOptionsBuilder<AirlineContext>().UseNpgsql(connectionString).Options;
+            context = new AirlineContext(options);
+            Console.WriteLine($"DBContext successfully created with connection string: \n{connectionString}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+            return;
+        }
+        
 
-        // Retrieve the connection string
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-
-        // Create DbContext options
-        var options = new DbContextOptionsBuilder<AirlineContext>()
-            .UseNpgsql(connectionString)
-            .Options;
-
-        // Use the DbContext
-        using var context = new AirlineContext(options);
-        Console.WriteLine("DbContext configured and ready to use!");
-
-        string? userInput;
         bool batch = true;
         int planeId = 0;
 
-        // Ask whether the user wants to create a batch insert query
-        userInput = GetValidInput(new List<string> { "y", "n" }, prompt: "Batch? (y/n)");
+        string prompt = "What data generation chain would you like to generate data for?\n" + 
+            "1. data generation chain 1" +
+            "2. data generation chain 2";
 
-        // Set batch preference
-        if (userInput.ToLower() == "y") batch = true;
-        else if (userInput.ToLower() == "n") batch = false;
+        // Ask which entry path the user wants to 
+        string DataGenChain = GetValidInput(new List<string> { "1", "2" }, prompt: "Which data generation chain?");
 
-        // Get plane ID
-        string planeIdPrompt = $"Please enter a valid plane ID (should be between 1 and {Constants.ValidPlaneIds.Count}).";
-        userInput = GetValidInput(Constants.ValidPlaneIds.ConvertAll<string>(id =>id.ToString()), planeIdPrompt);
+        int numRows = -1;
+        do
+        {
+            Console.WriteLine("How many rows do you want to generate? [0-2147483647]");
+            string numRowsString = Console.ReadLine();
+            bool parsed = int.TryParse(numRowsString, out numRows);
+        } while (numRows < 1);
+
+        switch (DataGenChain)
+        {
+            case "1":
+                // code block
+                return;
+            case "2":
+                // code block
+                return;
+            default:
+                Console.WriteLine("Invalid choice");
+                return;
+        }
+
+        //// Ask whether the user wants to create a batch insert query
+        //DataGenChain = GetValidInput(new List<string> { "y", "n" }, prompt: "Batch? (y/n)");
+
+        //// Set batch preference
+        //if (DataGenChain.ToLower() == "y") batch = true;
+        //else if (DataGenChain.ToLower() == "n") batch = false;
+
+        //// Get plane ID
+        //string planeIdPrompt = $"Please enter a valid plane ID (should be between 1 and {Constants.ValidPlaneIds.Count}).";
+        //DataGenChain = GetValidInput(Constants.ValidPlaneIds.ConvertAll<string>(id =>id.ToString()), planeIdPrompt);
     
-        // set the plane ID
-        try { planeId = Int32.Parse(userInput); }
-        // if the catch block ever gets hit it would most likely be due to integer overflow, but I don't know how it could happen given how input is being retrieved via GetValidInput
-        catch { Console.WriteLine("There was an error parsing the plane ID. Please contact the developer."); throw new Exception(); } 
+        //// set the plane ID
+        //try { planeId = Int32.Parse(DataGenChain); }
+        //// if the catch block ever gets hit it would most likely be due to integer overflow, but I don't know how it could happen given how input is being retrieved via GetValidInput
+        //catch { Console.WriteLine("There was an error parsing the plane ID. Please contact the developer."); throw new Exception(); } 
 
     
     }
@@ -58,6 +87,7 @@ public class Program
     static string GetValidInput(List<string> validInputs, string prompt, bool isCaseSensitive = false)
     {
         string invalidInputMsg = "Sorry, invalid input. Please try again.";
+        Console.WriteLine(prompt);
         string userInput = Console.ReadLine();
 
         if (isCaseSensitive)
