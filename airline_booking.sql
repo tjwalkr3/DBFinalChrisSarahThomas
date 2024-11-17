@@ -47,10 +47,10 @@ create table airline_booking.overbooking_rate (
 create table airline_booking.scheduled_flight (
 	id int primary key generated always as identity,
 	departure_time timestamp not null,
-	arrival_time timestamp not null,
+	arrival_time timestamp not null check(arrival_time > departure_time),
 	plane_id int not null references airline_booking.plane(id),
 	departure_airport_id int not null references airline_booking.airport(id),
-	arrival_airport_id int not null references airline_booking.airport(id),
+	arrival_airport_id int not null references airline_booking.airport(id) check(arrival_airport_id != departure_airport_id),
 	overbooking_id int not null references airline_booking.overbooking_rate(id)
 );
 
