@@ -112,3 +112,13 @@ create table airline_booking.concession_purchase_product (
 	constraint fk_concession_purchase_id foreign key (concession_purchase_id) references airline_booking.concession_purchase(id)
 );
 
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+ALTER TABLE airline_booking.scheduled_flight
+ADD CONSTRAINT prevent_overlapping_flights
+EXCLUDE USING gist
+(
+    plane_id WITH =,   
+    tsrange(departure_time, arrival_time, '[)') WITH &&
+)
+WHERE (departure_time IS NOT NULL AND arrival_time IS NOT NULL);
