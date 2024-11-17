@@ -128,14 +128,6 @@ VALUES (1, 400.00),
 		(9, 150.00),
 		(10, 200.00),
 		(11, 200.00);
-		
-insert into airline_booking.product (concession_name, price) values
-	('Pillow', 8.16),
-	('Blanket', 6.12),
-	('Headphones', 20.99),
-	('Candy bar', 3.99),
-	('Fountain drink', 2.89),
-	('Chewing gum', 1.99);
 
 INSERT INTO airline_booking.product (concession_name, price) VALUES
     ('Pillow', 8.16),
