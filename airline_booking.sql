@@ -1,4 +1,3 @@
- 
 
 drop schema if exists airline_booking cascade;
 create schema airline_booking;
@@ -14,12 +13,12 @@ create table airline_booking.passenger (
 
 create table airline_booking.seat_type (
 	id int primary key generated always as identity,
-	seat_type varchar(15) not null
+	seat_type varchar(15) unique not null
 );
 
 create table airline_booking.plane_type (
 	id int primary key generated always as identity,
-	plane_name varchar(30) not null
+	plane_name varchar(30) unique not null
 );
 
 create table airline_booking.plane_type_seat_type (
@@ -42,16 +41,16 @@ create table airline_booking.airport (
 
 create table airline_booking.overbooking_rate (
 	id int primary key generated always as identity,
-	rate decimal(5,2) not null
+	rate decimal(5,2) not null unique check(rate > 0)
 ); 
 
 create table airline_booking.scheduled_flight (
 	id int primary key generated always as identity,
 	departure_time timestamp not null,
-	arrival_time timestamp not null,
+	arrival_time timestamp not null check(arrival_time > departure_time),
 	plane_id int not null references airline_booking.plane(id),
 	departure_airport_id int not null references airline_booking.airport(id),
-	arrival_airport_id int not null references airline_booking.airport(id),
+	arrival_airport_id int not null references airline_booking.airport(id) check(arrival_airport_id != departure_airport_id),
 	overbooking_id int not null references airline_booking.overbooking_rate(id)
 );
 
@@ -59,7 +58,7 @@ create table airline_booking.reservation (
 	id int primary key generated always as identity,
 	passenger_id int not null,
 	scheduled_flight_id int not null,
-	ticket_cost decimal(5,2) not null,
+	ticket_cost decimal(5,2) not null check(ticket_cost > 0),
 	constraint fk_passenger_id foreign key (passenger_id) references airline_booking.passenger(id),
 	constraint fk_scheduled_flight_id foreign key (scheduled_flight_id) references airline_booking.scheduled_flight(id)	
 );
@@ -76,7 +75,7 @@ create table airline_booking.flight_history (
 	scheduled_flight_id int not null references airline_booking.scheduled_flight(id),
 	plane_id int not null references airline_booking.plane(id),
 	actual_departure_time timestamp,
-	actual_arrival_time timestamp
+	actual_arrival_time timestamp check(actual_arrival_time > actual_departure_time)
 );
 
 create table airline_booking.seat (
@@ -100,8 +99,8 @@ create table airline_booking.concession_purchase (
 
 create table airline_booking.product (
 	id int primary key generated always as identity,
-	concession_name varchar(200) not null,
-	price decimal(5,2) not null
+	concession_name varchar(200) unique not null,
+	price decimal(5,2) not null check(price > 0)
 );
 
 create table airline_booking.concession_purchase_product (

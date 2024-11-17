@@ -88,7 +88,7 @@ INSERT INTO airline_booking.flight_history (scheduled_flight_id, plane_id, actua
     (4, 2, '2024-08-16 00:15:00', '2024-08-16 07:30:00'),
     (5, 2, '2024-08-16 05:30:00', '2024-08-16 07:30:00'),
     (6, 2, DEFAULT, DEFAULT);
-	
+   
 INSERT INTO airline_booking.passenger (passenger_name, passport_id, phone, email, address) VALUES 
     ('Thomas Jones', '123456789', '801-420-6666', 'thomas@gmail.com', '123 W 456 S, Seattle, WA'),
     ('Sarah Martin', '987654321', '123-456-7890', 'sarah@gmail.com', '321 W 654 S, Salt Lake City, UT'),
