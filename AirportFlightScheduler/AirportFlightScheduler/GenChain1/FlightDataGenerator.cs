@@ -18,8 +18,8 @@ public class FlightDataGenerator
     {
         for (int i = 0; i < iterations; i++)
         {
-            Console.WriteLine($"Done with day: {i + 1}/{iterations}");
             await GenerateSingleDay(numPassengers, numProducts);
+            Console.WriteLine($"Done with day: {i + 1}/{iterations}");
         }
     }
 
@@ -34,7 +34,7 @@ public class FlightDataGenerator
         List<int> paymentIds = await GeneratePayments(reservationIds);
 
         // Data Generation Chain 2 (A LOT SIMPLER)
-        //await GenerateConcessionPurchases(seatIds, numProducts);
+        await GenerateConcessionPurchases(seatIds, numProducts);
     }
 
     // Generate a given number of fake passengers
@@ -212,9 +212,9 @@ public class FlightDataGenerator
     }
 
     // Given a list of reservationIDs, generate all the necessary seats in the seat table
-    private async Task<List<int>> GenerateSeats(List<int> reservationIds)
+    public async Task<List<int>> GenerateSeats(List<int> reservationIds)
     {
-        // Validate that the reservation IDs exist
+        // Validate that the reservation IDs exist and include their related data
         var validReservations = await _context.Reservations
             .Where(r => reservationIds.Contains(r.Id))
             .Include(r => r.Passenger)
@@ -228,71 +228,73 @@ public class FlightDataGenerator
             throw new ArgumentException("Some reservation IDs are invalid.");
         }
 
-        // Get seat types from the database
-        var seatTypes = await _context.SeatTypes.ToDictionaryAsync(st => st.SeatType1, st => st.Id);
+        // Group reservations by ScheduledFlightId
+        var reservationsGroupedByFlight = validReservations
+            .GroupBy(r => r.ScheduledFlightId)
+            .ToList();
 
-        // Dictionary to keep track of remaining seats per seat type for each plane
-        var seatAvailabilityByPlane = new Dictionary<int, Dictionary<int, int>>();
+        var createdSeats = new List<Seat>();
+        var createdSeatIds = new List<int>();
 
-        // Prepare seats for each reservation
-        List<Seat> seats = new List<Seat>();
-        Random random = new Random();
-
-        foreach (var reservation in validReservations)
+        foreach (var reservationGroup in reservationsGroupedByFlight)
         {
-            var plane = reservation.ScheduledFlight.Plane;
+            var scheduledFlight = reservationGroup.First().ScheduledFlight;
+            var plane = scheduledFlight.Plane;
+            var planeType = plane.PlaneType;
 
-            // Initialize seat availability for this plane if not already done
-            if (!seatAvailabilityByPlane.ContainsKey(plane.Id))
+            // Initialize seat availability for this plane
+            var allSeatTypes = await _context.SeatTypes.ToListAsync();
+            var planeTypeSeatTypes = await _context.PlaneTypeSeatTypes
+                .Where(ptst => ptst.PlaneTypeId == plane.PlaneTypeId)
+                .ToListAsync();
+
+            var seatAvailability = allSeatTypes.ToDictionary(
+                st => st.Id,
+                st => planeTypeSeatTypes.FirstOrDefault(ptst => ptst.SeatTypeId == st.Id)?.Quantity ?? 0
+            );
+
+            // Prepare seats for the current flight
+            var seatsForFlight = new List<Seat>();
+            Random random = new Random();
+
+            foreach (var reservation in reservationGroup)
             {
-                var planeTypeSeatTypes = await _context.PlaneTypeSeatTypes
-                    .Where(ptst => ptst.PlaneTypeId == plane.PlaneType.Id)
-                    .ToListAsync();
+                // Ensure there are available seats across all types
+                if (seatAvailability.Values.Sum() == 0)
+                {
+                    throw new InvalidOperationException($"Plane {plane.Id} is overbooked. No available seats.");
+                }
 
-                seatAvailabilityByPlane[plane.Id] = planeTypeSeatTypes.ToDictionary(
-                    ptst => ptst.SeatTypeId,
-                    ptst => ptst.Quantity
-                );
+                // Assign a seat type that still has availability
+                int seatType = seatAvailability
+                    .Where(kv => kv.Value > 0)
+                    .OrderBy(_ => random.Next())
+                    .Select(kv => kv.Key)
+                    .First();
+
+                // Assign the next seat number in sequence
+                int seatNumber = seatsForFlight.Count + 1;
+
+                createdSeats.Add(new Seat
+                {
+                    ReservationId = reservation.Id,
+                    PassengerId = reservation.PassengerId,
+                    SeatTypeId = seatType,
+                    SeatNumber = seatNumber,
+                    PrintedBoardingPassAt = scheduledFlight.DepartureTime.AddHours(-1)
+                });
+
+                // Reduce the seat count for the chosen type
+                seatAvailability[seatType]--;
             }
-
-            var availability = seatAvailabilityByPlane[plane.Id];
-
-            // Ensure there are available seats across all types
-            if (availability.Values.Sum() == 0)
-            {
-                throw new InvalidOperationException($"Plane {plane.Id} is overbooked. No available seats.");
-            }
-
-            // Assign a seat type that still has availability
-            int seatType = availability
-                .Where(kv => kv.Value > 0)
-                .OrderBy(_ => random.Next())
-                .Select(kv => kv.Key)
-                .First();
-
-            // Calculate the seat number based on remaining availability
-            int totalSeatsForType = seatAvailabilityByPlane[plane.Id].Sum(kv => kv.Value + availability[kv.Key]);
-            int seatNumber = totalSeatsForType - availability.Values.Sum() + 1;
-
-            seats.Add(new Seat
-            {
-                ReservationId = reservation.Id,
-                PassengerId = reservation.PassengerId,
-                SeatTypeId = seatType,
-                SeatNumber = seatNumber,
-                PrintedBoardingPassAt = reservation.ScheduledFlight.DepartureTime.AddHours(-1)
-            });
-
-            // Reduce the seat count for the chosen type
-            availability[seatType]--;
         }
 
-        // Save the seat assignments to the database
-        await _context.Seats.AddRangeAsync(seats);
+        // Save all changes in a single database call
+        await _context.Seats.AddRangeAsync(createdSeats);
         await _context.SaveChangesAsync();
 
-        // Return the ids of the created seats
-        return seats.Select(f => f.Id).ToList();
+        // Return the ids for the seats that were added to the database
+        return createdSeats.Select(f => f.Id).ToList(); ;
     }
 
     // Given a list of reservationIDs, generate all the necessary payments in the payment table
@@ -316,7 +318,7 @@ public class FlightDataGenerator
     }
 
     // Given a list of seats, create entries in the payment, concession_purchase, and concession_purchase_product table (for a given products) 
-    public async Task<List<int>> GenerateConcessionPurchases(List<int> seatIds, int numProducts)
+    public async Task GenerateConcessionPurchases(List<int> seatIds, int numProducts)
     {
         // Validate that the seat IDs exist
         var validSeats = await _context.Seats
@@ -328,7 +330,7 @@ public class FlightDataGenerator
             throw new ArgumentException("Some Seat IDs are invalid.");
         }
 
-        // Retrieve all products
+        // Retrieve all products in one database call
         var products = await _context.Products.ToListAsync();
         if (products.Count < numProducts)
         {
@@ -336,12 +338,14 @@ public class FlightDataGenerator
         }
 
         Random random = new Random();
-        List<int> concessionPurchaseIds = new List<int>();
+        List<Payment> payments = new List<Payment>();
+        List<ConcessionPurchase> concessionPurchases = new List<ConcessionPurchase>();
+        List<ConcessionPurchaseProduct> concessionPurchaseProducts = new List<ConcessionPurchaseProduct>();
 
         foreach (var seat in validSeats)
         {
-            // Select 3 random products
-            var selectedProducts = products.OrderBy(_ => random.Next()).Take(3).ToList();
+            // Select `numProducts` random products
+            var selectedProducts = products.OrderBy(_ => random.Next()).Take(numProducts).ToList();
 
             // Calculate the total cost of the products
             decimal totalCost = selectedProducts.Sum(p => p.Price);
@@ -352,37 +356,34 @@ public class FlightDataGenerator
                 Amount = totalCost,
                 ReservationId = seat.ReservationId
             };
-            _context.Payments.Add(payment);
-            await _context.SaveChangesAsync(); // Save to get the Payment ID
+            payments.Add(payment);
 
-            // Create a ConcessionPurchase entry
+            // Create a ConcessionPurchase entry and link it to the payment
             var concessionPurchase = new ConcessionPurchase
             {
-                PaymentId = payment.Id,
-                SeatId = seat.Id
+                SeatId = seat.Id,
+                Payment = payment // Link the Payment object directly
             };
-            _context.ConcessionPurchases.Add(concessionPurchase);
-            await _context.SaveChangesAsync(); // Save to get the ConcessionPurchase ID
+            concessionPurchases.Add(concessionPurchase);
 
-            // Add the ConcessionPurchaseProduct entries
+            // Add the ConcessionPurchaseProduct entries and link to the ConcessionPurchase
             foreach (var product in selectedProducts)
             {
-                var concessionPurchaseProduct = new ConcessionPurchaseProduct
+                concessionPurchaseProducts.Add(new ConcessionPurchaseProduct
                 {
-                    ConcessionPurchaseId = concessionPurchase.Id,
+                    ConcessionPurchase = concessionPurchase, // Link the ConcessionPurchase object directly
                     ProductId = product.Id,
                     Quantity = 1
-                };
-                _context.ConcessionPurchaseProducts.Add(concessionPurchaseProduct);
+                });
             }
-
-            // Save changes to the database
-            await _context.SaveChangesAsync();
-
-            // Collect the ID of the created concession purchase
-            concessionPurchaseIds.Add(concessionPurchase.Id);
         }
 
-        return concessionPurchaseIds;
+        // Bulk add all entities
+        await _context.Payments.AddRangeAsync(payments);
+        await _context.ConcessionPurchases.AddRangeAsync(concessionPurchases);
+        await _context.ConcessionPurchaseProducts.AddRangeAsync(concessionPurchaseProducts);
+
+        // Save all changes in a single database call
+        await _context.SaveChangesAsync();
     }
 }

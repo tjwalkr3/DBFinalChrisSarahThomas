@@ -26,11 +26,11 @@ public class Program
         }
 
         // Ask which entry path the user wants to 
-        string DataGenChain = GetValidInput(new List<string> { "1" }, prompt: "PRESS 1 TO GENERATE DATA!!!");
+        string DataGenChain = GetValidInput(new List<string> { "1" }, prompt: "Press 1 then [ENTER] to generate data!");
 
         Console.WriteLine("Generating data...");
         FlightDataGenerator generator = new(context);
-        await generator.GenerateData(5, 5, 3);
+        await generator.GenerateData(1, 50, 3);
         Console.WriteLine("Done.");
     }
 
