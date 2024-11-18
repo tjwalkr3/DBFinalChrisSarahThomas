@@ -13,19 +13,28 @@ public class FlightDataGenerator
         _context = context;
     }
 
-    // Run all of the 
-    public async Task GenerateAllData()
+    // Iterate through the data generations functions a set number of times
+    public async Task GenerateData(int iterations, int numPassengers, int numProducts)
+    {
+        for (int i = 0; i < iterations; i++)
+        {
+            Console.WriteLine($"Done with day: {i + 1}/{iterations}");
+            await GenerateSingleDay(numPassengers, numProducts);
+        }
+    }
+
+    // Run all of the data generation functions
+    private async Task GenerateSingleDay(int numPassengers, int numProducts)
     {
         // Data Generation Chain 1
         List<int> scheduledFlightIds = await GenerateScheduledFlights();
         List<int> flightHistoryIds = await GenerateFlightHistory(scheduledFlightIds);
-        List<int> reservationIds = await GenerateReservations(scheduledFlightIds);
+        List<int> reservationIds = await GenerateReservations(scheduledFlightIds, numPassengers);
         List<int> seatIds = await GenerateSeats(reservationIds);
         List<int> paymentIds = await GeneratePayments(reservationIds);
 
-        // Data Generation Chain 2
-        // Put the stuff for data generation chain 2 here
-        // There's no sense in making another class for it when everything neede is already local
+        // Data Generation Chain 2 (A LOT SIMPLER)
+        //await GenerateConcessionPurchases(seatIds, numProducts);
     }
 
     // Generate a given number of fake passengers
@@ -38,11 +47,11 @@ public class FlightDataGenerator
         {
             passengers.Add(new Passenger
             {
-                PassengerName = PlaceholderDataGenerator.GeneratePassengerName(),
-                PassportId = PlaceholderDataGenerator.GeneratePassportId(),
-                Phone = PlaceholderDataGenerator.GeneratePhoneNumber(),
-                Email = PlaceholderDataGenerator.GenerateEmail(),
-                Address = PlaceholderDataGenerator.GenerateAddress()
+                PassengerName = PlaceholderData.GeneratePassengerName(),
+                PassportId = PlaceholderData.GeneratePassportId(),
+                Phone = PlaceholderData.GeneratePhoneNumber(),
+                Email = PlaceholderData.GenerateEmail(),
+                Address = PlaceholderData.GenerateAddress()
             });
         }
 
@@ -90,7 +99,7 @@ public class FlightDataGenerator
             while (remainingTime.TotalMinutes > 0)
             {
                 // Filter the flight times for flights that can fit in the remaining time in the day
-                var validAirportPairs = PlaceholderDataGenerator.flightTimes
+                var validAirportPairs = PlaceholderData.flightTimes
                     .Where(f => f.Key.Item1 == planeCurrentLocation && f.Value <= remainingTime.TotalMinutes)
                     .Select(f => f.Key)
                     .ToList();
@@ -102,7 +111,7 @@ public class FlightDataGenerator
                 }
 
                 var randomAirportPair = validAirportPairs.ElementAt(rand.Next(validAirportPairs.Count));
-                int flightDuration = PlaceholderDataGenerator.flightTimes[randomAirportPair];
+                int flightDuration = PlaceholderData.flightTimes[randomAirportPair];
 
                 remainingTime = remainingTime.Subtract(TimeSpan.FromMinutes(flightDuration));
                 DateTime departureTime = planeLastArrival;
@@ -156,7 +165,7 @@ public class FlightDataGenerator
     }
 
     // Given a list of scheduledFlightIds, generate all the necessary reservations in the reservation table
-    private async Task<List<int>> GenerateReservations(List<int> scheduledFlightIds)
+    private async Task<List<int>> GenerateReservations(List<int> scheduledFlightIds, int numPassengers)
     {
         // Validate that the ScheduledFlight IDs exist
         var validFlights = await _context.ScheduledFlights
@@ -178,7 +187,7 @@ public class FlightDataGenerator
             decimal ticketCost = (decimal)flightDuration * 0.15m; // Example cost logic: $0.15 per minute of flight
 
             // Generate 50 passengers for this flight
-            List<int> passengerIds = await GeneratePassengers(5);
+            List<int> passengerIds = await GeneratePassengers(numPassengers);
 
             // Create reservations for the generated passengers
             foreach (var passengerId in passengerIds)
@@ -304,5 +313,76 @@ public class FlightDataGenerator
 
         // Return the ids of the created payments
         return payments.Select(f => f.Id).ToList();
+    }
+
+    // Given a list of seats, create entries in the payment, concession_purchase, and concession_purchase_product table (for a given products) 
+    public async Task<List<int>> GenerateConcessionPurchases(List<int> seatIds, int numProducts)
+    {
+        // Validate that the seat IDs exist
+        var validSeats = await _context.Seats
+            .Where(s => seatIds.Contains(s.Id))
+            .ToListAsync();
+
+        if (validSeats.Count != seatIds.Count)
+        {
+            throw new ArgumentException("Some Seat IDs are invalid.");
+        }
+
+        // Retrieve all products
+        var products = await _context.Products.ToListAsync();
+        if (products.Count < numProducts)
+        {
+            throw new InvalidOperationException("Not enough products available to fulfill the request.");
+        }
+
+        Random random = new Random();
+        List<int> concessionPurchaseIds = new List<int>();
+
+        foreach (var seat in validSeats)
+        {
+            // Select 3 random products
+            var selectedProducts = products.OrderBy(_ => random.Next()).Take(3).ToList();
+
+            // Calculate the total cost of the products
+            decimal totalCost = selectedProducts.Sum(p => p.Price);
+
+            // Create a Payment entry
+            var payment = new Payment
+            {
+                Amount = totalCost,
+                ReservationId = seat.ReservationId
+            };
+            _context.Payments.Add(payment);
+            await _context.SaveChangesAsync(); // Save to get the Payment ID
+
+            // Create a ConcessionPurchase entry
+            var concessionPurchase = new ConcessionPurchase
+            {
+                PaymentId = payment.Id,
+                SeatId = seat.Id
+            };
+            _context.ConcessionPurchases.Add(concessionPurchase);
+            await _context.SaveChangesAsync(); // Save to get the ConcessionPurchase ID
+
+            // Add the ConcessionPurchaseProduct entries
+            foreach (var product in selectedProducts)
+            {
+                var concessionPurchaseProduct = new ConcessionPurchaseProduct
+                {
+                    ConcessionPurchaseId = concessionPurchase.Id,
+                    ProductId = product.Id,
+                    Quantity = 1
+                };
+                _context.ConcessionPurchaseProducts.Add(concessionPurchaseProduct);
+            }
+
+            // Save changes to the database
+            await _context.SaveChangesAsync();
+
+            // Collect the ID of the created concession purchase
+            concessionPurchaseIds.Add(concessionPurchase.Id);
+        }
+
+        return concessionPurchaseIds;
     }
 }

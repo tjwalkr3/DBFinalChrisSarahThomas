@@ -26,45 +26,12 @@ public class Program
         }
 
         // Ask which entry path the user wants to 
-        string DataGenChain = GetValidInput(new List<string> { "1", "2" }, prompt: "Which data generation chain? [1, 2]");
+        string DataGenChain = GetValidInput(new List<string> { "1" }, prompt: "PRESS 1 TO GENERATE DATA!!!");
 
-        switch (DataGenChain)
-        {
-            case "1":
-                FlightDataGenerator generator = new(context);
-                Console.WriteLine("Generating data...");
-                await generator.GenerateAllData();
-                Console.WriteLine("Done.");
-                break;
-            case "2":
-                // code block
-                break;
-            default:
-                Console.WriteLine("Invalid choice");
-                break;
-        }
-
-
-        //bool batch = true;
-        //int planeId = 0;
-
-        //// Ask whether the user wants to create a batch insert query
-        //DataGenChain = GetValidInput(new List<string> { "y", "n" }, prompt: "Batch? (y/n)");
-
-        //// Set batch preference
-        //if (DataGenChain.ToLower() == "y") batch = true;
-        //else if (DataGenChain.ToLower() == "n") batch = false;
-
-        //// Get plane ID
-        //string planeIdPrompt = $"Please enter a valid plane ID (should be between 1 and {Constants.ValidPlaneIds.Count}).";
-        //DataGenChain = GetValidInput(Constants.ValidPlaneIds.ConvertAll<string>(id =>id.ToString()), planeIdPrompt);
-
-        //// set the plane ID
-        //try { planeId = Int32.Parse(DataGenChain); }
-        //// if the catch block ever gets hit it would most likely be due to integer overflow, but I don't know how it could happen given how input is being retrieved via GetValidInput
-        //catch { Console.WriteLine("There was an error parsing the plane ID. Please contact the developer."); throw new Exception(); } 
-
-
+        Console.WriteLine("Generating data...");
+        FlightDataGenerator generator = new(context);
+        await generator.GenerateData(5, 5, 3);
+        Console.WriteLine("Done.");
     }
 
     /// < summary >
