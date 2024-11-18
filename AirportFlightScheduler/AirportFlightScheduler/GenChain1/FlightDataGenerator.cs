@@ -14,14 +14,18 @@ public class FlightDataGenerator
     }
 
     // Run all of the 
-    public async Task<List<int>> GenerateAllData()
+    public async Task GenerateAllData()
     {
+        // Data Generation Chain 1
         List<int> scheduledFlightIds = await GenerateScheduledFlights();
+        List<int> flightHistoryIds = await GenerateFlightHistory(scheduledFlightIds);
         List<int> reservationIds = await GenerateReservations(scheduledFlightIds);
         List<int> seatIds = await GenerateSeats(reservationIds);
         List<int> paymentIds = await GeneratePayments(reservationIds);
 
-        return seatIds;
+        // Data Generation Chain 2
+        // Put the stuff for data generation chain 2 here
+        // There's no sense in making another class for it when everything neede is already local
     }
 
     // Generate a given number of fake passengers
@@ -34,11 +38,11 @@ public class FlightDataGenerator
         {
             passengers.Add(new Passenger
             {
-                PassengerName = DataGenerator.GeneratePassengerName(),
-                PassportId = DataGenerator.GeneratePassportId(),
-                Phone = DataGenerator.GeneratePhoneNumber(),
-                Email = DataGenerator.GenerateEmail(),
-                Address = DataGenerator.GenerateAddress()
+                PassengerName = PlaceholderDataGenerator.GeneratePassengerName(),
+                PassportId = PlaceholderDataGenerator.GeneratePassportId(),
+                Phone = PlaceholderDataGenerator.GeneratePhoneNumber(),
+                Email = PlaceholderDataGenerator.GenerateEmail(),
+                Address = PlaceholderDataGenerator.GenerateAddress()
             });
         }
 
@@ -86,7 +90,7 @@ public class FlightDataGenerator
             while (remainingTime.TotalMinutes > 0)
             {
                 // Filter the flight times for flights that can fit in the remaining time in the day
-                var validAirportPairs = DataGenerator.flightTimes
+                var validAirportPairs = PlaceholderDataGenerator.flightTimes
                     .Where(f => f.Key.Item1 == planeCurrentLocation && f.Value <= remainingTime.TotalMinutes)
                     .Select(f => f.Key)
                     .ToList();
@@ -98,7 +102,7 @@ public class FlightDataGenerator
                 }
 
                 var randomAirportPair = validAirportPairs.ElementAt(rand.Next(validAirportPairs.Count));
-                int flightDuration = DataGenerator.flightTimes[randomAirportPair];
+                int flightDuration = PlaceholderDataGenerator.flightTimes[randomAirportPair];
 
                 remainingTime = remainingTime.Subtract(TimeSpan.FromMinutes(flightDuration));
                 DateTime departureTime = planeLastArrival;
@@ -117,6 +121,7 @@ public class FlightDataGenerator
 
                 // Update the plane's current location to the arrival airport
                 planeCurrentLocation = randomAirportPair.Item2;
+                planeLastArrival = departureTime.AddMinutes(flightDuration);
             }
         }
 
@@ -126,6 +131,28 @@ public class FlightDataGenerator
 
         // Return a list of the scheduled flight IDs
         return newFlights.Select(f => f.Id).ToList();
+    }
+
+    // Generate one entry in the flight history for every entry in the scheduled flights
+    private async Task<List<int>> GenerateFlightHistory(List<int> scheduledFlightIds)
+    {
+        var scheduledFlights = _context.ScheduledFlights
+            .Where(s => scheduledFlightIds.Contains(s.Id))
+            .ToList();
+
+        List<FlightHistory> flightHistoryEntries = scheduledFlights.Select(s => new FlightHistory
+        {
+            ScheduledFlightId = s.Id,
+            PlaneId = s.PlaneId,
+            ActualDepartureTime = s.DepartureTime,
+            ActualArrivalTime = s.ArrivalTime
+        }).ToList();
+
+        _context.FlightHistories.AddRange(flightHistoryEntries);
+        await _context.SaveChangesAsync();
+
+        // Return the ids of the created payments
+        return flightHistoryEntries.Select(h => h.Id).ToList();
     }
 
     // Given a list of scheduledFlightIds, generate all the necessary reservations in the reservation table
@@ -151,7 +178,7 @@ public class FlightDataGenerator
             decimal ticketCost = (decimal)flightDuration * 0.15m; // Example cost logic: $0.15 per minute of flight
 
             // Generate 50 passengers for this flight
-            List<int> passengerIds = await GeneratePassengers(50);
+            List<int> passengerIds = await GeneratePassengers(5);
 
             // Create reservations for the generated passengers
             foreach (var passengerId in passengerIds)
@@ -195,8 +222,8 @@ public class FlightDataGenerator
         // Get seat types from the database
         var seatTypes = await _context.SeatTypes.ToDictionaryAsync(st => st.SeatType1, st => st.Id);
 
-        // Dictionary to keep track of remaining seats per seat type for each plane type
-        var seatAvailabilityByPlaneType = new Dictionary<int, Dictionary<int, int>>();
+        // Dictionary to keep track of remaining seats per seat type for each plane
+        var seatAvailabilityByPlane = new Dictionary<int, Dictionary<int, int>>();
 
         // Prepare seats for each reservation
         List<Seat> seats = new List<Seat>();
@@ -205,27 +232,26 @@ public class FlightDataGenerator
         foreach (var reservation in validReservations)
         {
             var plane = reservation.ScheduledFlight.Plane;
-            var planeType = plane.PlaneType;
 
-            // Initialize seat availability for this plane type if not already done
-            if (!seatAvailabilityByPlaneType.ContainsKey(planeType.Id))
+            // Initialize seat availability for this plane if not already done
+            if (!seatAvailabilityByPlane.ContainsKey(plane.Id))
             {
                 var planeTypeSeatTypes = await _context.PlaneTypeSeatTypes
-                    .Where(ptst => ptst.PlaneTypeId == planeType.Id)
+                    .Where(ptst => ptst.PlaneTypeId == plane.PlaneType.Id)
                     .ToListAsync();
 
-                seatAvailabilityByPlaneType[planeType.Id] = planeTypeSeatTypes.ToDictionary(
+                seatAvailabilityByPlane[plane.Id] = planeTypeSeatTypes.ToDictionary(
                     ptst => ptst.SeatTypeId,
                     ptst => ptst.Quantity
                 );
             }
 
-            var availability = seatAvailabilityByPlaneType[planeType.Id];
+            var availability = seatAvailabilityByPlane[plane.Id];
 
             // Ensure there are available seats across all types
             if (availability.Values.Sum() == 0)
             {
-                throw new InvalidOperationException($"Plane type {planeType.Id} is overbooked. No available seats.");
+                throw new InvalidOperationException($"Plane {plane.Id} is overbooked. No available seats.");
             }
 
             // Assign a seat type that still has availability
@@ -235,8 +261,9 @@ public class FlightDataGenerator
                 .Select(kv => kv.Key)
                 .First();
 
-            // Assign the next seat number in sequence
-            int seatNumber = seatAvailabilityByPlaneType[planeType.Id].Values.Sum() - availability.Values.Sum() + 1;
+            // Calculate the seat number based on remaining availability
+            int totalSeatsForType = seatAvailabilityByPlane[plane.Id].Sum(kv => kv.Value + availability[kv.Key]);
+            int seatNumber = totalSeatsForType - availability.Values.Sum() + 1;
 
             seats.Add(new Seat
             {
@@ -258,7 +285,6 @@ public class FlightDataGenerator
         // Return the ids of the created seats
         return seats.Select(f => f.Id).ToList();
     }
-
 
     // Given a list of reservationIDs, generate all the necessary payments in the payment table
     private async Task<List<int>> GeneratePayments(List<int> reservationIds)

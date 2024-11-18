@@ -1,6 +1,6 @@
 ﻿namespace AirportFlightScheduler.GenChain1;
 
-public static class DataGenerator
+public static class PlaceholderDataGenerator
 {
     private static Random rand = new Random();
 
