@@ -30,7 +30,7 @@ public class Program
 
         Console.WriteLine("Generating data...");
         FlightDataGenerator generator = new(context);
-        await generator.GenerateData(1, 50, 3);
+        await generator.GenerateData(10, 50, 3);
         Console.WriteLine("Done.");
     }
 
