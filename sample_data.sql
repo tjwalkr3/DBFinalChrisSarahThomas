@@ -75,8 +75,8 @@ INSERT INTO airline_booking.scheduled_flight (departure_time,arrival_time,plane_
 INSERT INTO airline_booking.flight_history (scheduled_flight_id,plane_id,actual_departure_time,actual_arrival_time) VALUES
 	 (1,1,'2024-08-16 04:40:00','2024-08-16 06:45:00'),
 	 (2,1,'2024-08-16 07:20:00','2024-08-16 13:20:00'),
-	 (4,2,'2024-08-16 00:15:00','2024-08-16 07:30:00'),
-	 (5,2,'2024-08-16 05:30:00','2024-08-16 07:30:00'),
+	 (4,2,'2024-08-16 07:40:00','2024-08-16 09:40:00'),
+	 (5,2,'2024-08-16 10:05:00','2024-08-16 12:20:00'),
 	 (6,2,NULL,NULL);
    
 INSERT INTO airline_booking.passenger (passenger_name, passport_id, phone, email, address) VALUES 
