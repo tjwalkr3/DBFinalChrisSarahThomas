@@ -16,6 +16,9 @@ begin transaction;
 	values ('2024-06-12 03:00:00', '2024-06-12 05:00:00', 1, 2, 3, 1);
 rollback;
 
+SELECT setval(pg_get_serial_sequence('airline_booking.scheduled_flight', 'id'), coalesce(MAX(id), 1))
+from airline_booking.scheduled_flight;
+
 -- scheduled flights insert fail
 -- arrival time less than departure time
 insert into airline_booking.scheduled_flight (departure_time, arrival_time, plane_id, departure_airport_id, arrival_airport_id, overbooking_id)
@@ -40,6 +43,9 @@ begin transaction;
 	select * from airline_booking.flight_history;
 rollback;
 
+SELECT setval(pg_get_serial_sequence('airline_booking.flight_history', 'id'), coalesce(MAX(id), 1))
+from airline_booking.flight_history;
+
 -- flight_history insert fail 
 -- arrival time is less than departure time
 insert into airline_booking.flight_history (scheduled_flight_id, plane_id, actual_departure_time, actual_arrival_time)
@@ -62,6 +68,9 @@ begin transaction;
 
 rollback;
 
+SELECT setval(pg_get_serial_sequence('airline_booking.product', 'id'), coalesce(MAX(id), 1))
+from airline_booking.product;
+
 -- product insert fail
 -- concession_name is not unique
 insert into airline_booking.product (concession_name, price)
@@ -80,6 +89,9 @@ begin transaction;
 
 	select * from airline_booking.overbooking_rate;
 rollback;
+
+SELECT setval(pg_get_serial_sequence('airline_booking.overbooking_rate', 'id'), coalesce(MAX(id), 1))
+from airline_booking.overbooking_rate;
 
 -- overbooking_reate insert fail 
 -- rate is less than 0
@@ -100,6 +112,9 @@ begin transaction;
 	select * from airline_booking.reservation;
 rollback;
 
+SELECT setval(pg_get_serial_sequence('airline_booking.reservation', 'id'), coalesce(MAX(id), 1))
+from airline_booking.reservation;
+
 -- reservation insert fail
 -- ticket_cost is less than 0
 insert into airline_booking.reservation (passenger_id, scheduled_flight_id, ticket_cost)
@@ -113,6 +128,9 @@ begin transaction;
 
 	select * from airline_booking.seat_type;
 rollback;
+
+SELECT setval(pg_get_serial_sequence('airline_booking.seat_type', 'id'), coalesce(MAX(id), 1))
+from airline_booking.seat_type;
 
 -- seat_type insert fail
 -- seat_type is not unique
