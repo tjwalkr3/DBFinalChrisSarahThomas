@@ -92,21 +92,21 @@ values (2.25);
 begin transaction;
 	-- reservation succesful insert
 	-- ticket_cost is greater than 0
-	insert into reservation (passenger_id, scheduled_flight_id, ticket_cost)
-	values (1, 10, 200.00);
+	insert into airline_booking.reservation (passenger_id, scheduled_flight_id, ticket_cost)
+	values (1, 9, 200.00);
 
 	select * from airline_booking.reservation;
 rollback;
 
 -- reservation insert fail
 -- ticket_cost is less than 0
-insert into reservation (passenger_id, scheduled_flight_id, ticket_cost)
-values (1, 10, -100.00);
+insert into airline_booking.reservation (passenger_id, scheduled_flight_id, ticket_cost)
+values (1, 9, -100.00);
 
 begin transaction;
 	-- seat_type succesful insert
 	-- seat_type is unique
-	insert into seat_type (seat_type)
+	insert into airline_booking.seat_type (seat_type)
 	values ('The Throne');
 
 	select * from airline_booking.seat_type;
@@ -114,5 +114,5 @@ rollback;
 
 -- seat_type insert fail
 -- seat_type is not unique
-insert into seat_type (seat_type)
+insert into airline_booking.seat_type (seat_type)
 values ('coach');
