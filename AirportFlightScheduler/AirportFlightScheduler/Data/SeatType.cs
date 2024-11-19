@@ -11,5 +11,5 @@ public partial class SeatType
 
     public virtual ICollection<PlaneTypeSeatType> PlaneTypeSeatTypes { get; set; } = new List<PlaneTypeSeatType>();
 
-    public virtual ICollection<Seat> Seats { get; set; } = new List<Seat>();
+    public virtual ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
 }

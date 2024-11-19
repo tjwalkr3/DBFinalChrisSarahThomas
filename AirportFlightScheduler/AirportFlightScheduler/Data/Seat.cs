@@ -9,8 +9,6 @@ public partial class Seat
 
     public int ReservationId { get; set; }
 
-    public int SeatTypeId { get; set; }
-
     public DateTime? PrintedBoardingPassAt { get; set; }
 
     public int? SeatNumber { get; set; }
@@ -20,6 +18,4 @@ public partial class Seat
     public virtual ICollection<ConcessionPurchase> ConcessionPurchases { get; set; } = new List<ConcessionPurchase>();
 
     public virtual Reservation Reservation { get; set; } = null!;
-
-    public virtual SeatType SeatType { get; set; } = null!;
 }

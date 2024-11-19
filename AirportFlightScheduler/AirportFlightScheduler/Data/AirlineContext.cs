@@ -291,6 +291,8 @@ public partial class AirlineContext : DbContext
                 .HasColumnName("id");
             entity.Property(e => e.PassengerId).HasColumnName("passenger_id");
             entity.Property(e => e.ScheduledFlightId).HasColumnName("scheduled_flight_id");
+            entity.Property(e => e.SeatCount).HasColumnName("seat_count");
+            entity.Property(e => e.SeatTypeId).HasColumnName("seat_type_id");
             entity.Property(e => e.TicketCost)
                 .HasPrecision(5, 2)
                 .HasColumnName("ticket_cost");
@@ -304,6 +306,11 @@ public partial class AirlineContext : DbContext
                 .HasForeignKey(d => d.ScheduledFlightId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_scheduled_flight_id");
+
+            entity.HasOne(d => d.SeatType).WithMany(p => p.Reservations)
+                .HasForeignKey(d => d.SeatTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_seat_type_id");
         });
 
         modelBuilder.Entity<ScheduledFlight>(entity =>
@@ -362,17 +369,11 @@ public partial class AirlineContext : DbContext
                 .HasColumnName("printed_boarding_pass_at");
             entity.Property(e => e.ReservationId).HasColumnName("reservation_id");
             entity.Property(e => e.SeatNumber).HasColumnName("seat_number");
-            entity.Property(e => e.SeatTypeId).HasColumnName("seat_type_id");
 
             entity.HasOne(d => d.Reservation).WithMany(p => p.Seats)
                 .HasForeignKey(d => d.ReservationId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_ab_reservation_id");
-
-            entity.HasOne(d => d.SeatType).WithMany(p => p.Seats)
-                .HasForeignKey(d => d.SeatTypeId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_ab_seat_type_id");
         });
 
         modelBuilder.Entity<SeatType>(entity =>
