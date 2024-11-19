@@ -47,6 +47,8 @@ values (7, 1, '2024-08-21 010:00:00', '2024-08-21 08:00:00');
 
 --flight_history insert fail
 --flights overlap
+insert into airline_booking.flight_history (scheduled_flight_id, plane_id, actual_departure_time, actual_arrival_time)
+values (7, 2, '2024-08-16 10:10:00.000', '2024-08-16 12:10:00');
 
 
 begin transaction;

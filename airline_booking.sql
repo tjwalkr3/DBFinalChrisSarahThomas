@@ -44,6 +44,8 @@ create table airline_booking.overbooking_rate (
 	rate decimal(5,2) not null unique check(rate > 0)
 ); 
 
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
 create table airline_booking.scheduled_flight (
 	id int primary key generated always as identity,
 	departure_time timestamp not null,
@@ -69,6 +71,8 @@ create table airline_booking.payment (
 	amount decimal(5,2) not null,
 	constraint fk_reservation_id foreign key (reservation_id) references airline_booking.reservation(id)
 );
+
+CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 create table airline_booking.flight_history (
 	id int primary key generated always as identity,
@@ -122,3 +126,14 @@ EXCLUDE USING gist
     tsrange(departure_time, arrival_time, '[)') WITH &&
 )
 WHERE (departure_time IS NOT NULL AND arrival_time IS NOT NULL);
+
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+ALTER TABLE airline_booking.flight_history
+ADD CONSTRAINT prevent_overlapping_flights_history 
+EXCLUDE USING gist 
+(
+	plane_id WITH =, 
+	tsrange(actual_departure_time, actual_arrival_time, '[)'::text) WITH &&
+) 
+WHERE (((actual_departure_time IS NOT NULL) AND (actual_arrival_time IS NOT NULL)));
