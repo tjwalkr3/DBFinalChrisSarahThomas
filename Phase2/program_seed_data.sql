@@ -112,17 +112,6 @@ create table airline_booking2.concession_purchase_product (
 	constraint fk_concession_purchase_id foreign key (concession_purchase_id) references airline_booking2.concession_purchase(id)
 );
 
-CREATE EXTENSION IF NOT EXISTS btree_gist;
-
-ALTER TABLE airline_booking2.scheduled_flight
-ADD CONSTRAINT prevent_overlapping_flights
-EXCLUDE USING gist
-(
-    plane_id WITH =,   
-    tsrange(departure_time, arrival_time, '[)') WITH &&
-)
-WHERE (departure_time IS NOT NULL AND arrival_time IS NOT NULL);
-
 INSERT INTO airline_booking2.plane_type (plane_name) values 
 	('Boeing 737-200'),
     ('Boeing 737-220'),
@@ -130,10 +119,10 @@ INSERT INTO airline_booking2.plane_type (plane_name) values
     ('Boeing 757-020'),
     ('Airbus A300-03');
 	
-INSERT INTO airline_booking2.seat_type (seat_type) VALUES
-    ('coach'),
-    ('business class'),
-    ('first class');
+INSERT INTO airline_booking2.seat_type (seat_type) values
+	('coach'),
+	('business class'),
+	('first class');
 	
 INSERT INTO airline_booking2.overbooking_rate (rate) VALUES
     (2.25);
@@ -193,3 +182,108 @@ insert into airline_booking2.product (concession_name, price) values
 	('Candy bar', 3.99),
 	('Fountain drink', 2.89),
 	('Chewing gum', 1.99);
+
+
+---------------------------------------------------------------
+-- Functions
+---------------------------------------------------------------
+
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+ALTER TABLE airline_booking2.scheduled_flight
+ADD CONSTRAINT prevent_overlapping_flights
+EXCLUDE USING gist
+(
+    plane_id WITH =,   
+    tsrange(departure_time, arrival_time, '[)') WITH &&
+)
+WHERE (departure_time IS NOT NULL AND arrival_time IS NOT NULL);
+
+create or replace function enforce_overbooking_limit() returns trigger
+language plpgsql
+as $$
+declare
+    plane_id int;
+    overbooking_rate numeric(5,2);
+    total_plane_seats int;
+    total_first_class_plane_seats int;
+    total_business_class_plane_seats int;
+    total_seats_booked int;
+    first_class_seats_booked int;
+    business_class_seats_booked int;
+    max_seat_bookings int;
+    overbooking_error_msg varchar(150) := 'The reservation cannot be made because it would exceed this scheduled flight''s overbooking rate.';
+begin
+    -- Get the plane_id for the scheduled flight
+    select sf.plane_id into plane_id
+    from airline_booking2.scheduled_flight sf
+    where sf.id = new.scheduled_flight_id;
+
+    -- Get the overbooking rate for the scheduled flight
+    select o.rate into overbooking_rate 
+    from airline_booking2.scheduled_flight sf
+    inner join airline_booking2.overbooking_rate o on o.id = sf.overbooking_id
+    where sf.id = new.scheduled_flight_id;
+
+    -- Calculate total seats for the plane
+    select sum(ptst.quantity) into total_plane_seats
+    from airline_booking2.plane p
+    inner join airline_booking2.plane_type pt on p.plane_type_id = pt.id
+    inner join airline_booking2.plane_type_seat_type ptst on ptst.plane_type_id = pt.id
+    where p.id = plane_id;
+
+    -- Calculate total first-class seats for the plane
+    select sum(ptst.quantity) into total_first_class_plane_seats
+    from airline_booking2.plane p
+    inner join airline_booking2.plane_type pt on p.plane_type_id = pt.id
+    inner join airline_booking2.plane_type_seat_type ptst on ptst.plane_type_id = pt.id
+    where p.id = plane_id and ptst.seat_type_id = 3; -- First class
+
+    -- Calculate total business-class seats for the plane
+    select sum(ptst.quantity) into total_business_class_plane_seats
+    from airline_booking2.plane p
+    inner join airline_booking2.plane_type pt on p.plane_type_id = pt.id
+    inner join airline_booking2.plane_type_seat_type ptst on ptst.plane_type_id = pt.id
+    where p.id = plane_id and ptst.seat_type_id = 2; -- Business class
+
+    -- Calculate total seats booked for the scheduled flight
+    select coalesce(sum(r.seat_count), 0) into total_seats_booked
+    from airline_booking2.reservation r
+    where r.scheduled_flight_id = new.scheduled_flight_id;
+
+    -- Calculate total first-class seats booked for the scheduled flight
+    select coalesce(sum(r.seat_count), 0) into first_class_seats_booked
+    from airline_booking2.reservation r
+    where r.scheduled_flight_id = new.scheduled_flight_id and r.seat_type_id = 3;
+
+    -- Calculate total business-class seats booked for the scheduled flight
+    select coalesce(sum(r.seat_count), 0) into business_class_seats_booked
+    from airline_booking2.reservation r
+    where r.scheduled_flight_id = new.scheduled_flight_id and r.seat_type_id = 2;
+
+    -- Calculate the maximum allowed seat bookings (including overbooking)
+    select total_plane_seats + ceiling(overbooking_rate * total_plane_seats) into max_seat_bookings;
+
+    -- Validate overbooking limits
+    if new.seat_type_id = 1 then -- Coach seats
+        if total_seats_booked + new.seat_count > max_seat_bookings then
+            raise exception '%', overbooking_error_msg;
+        end if;
+    elsif new.seat_type_id = 2 then -- Business class seats
+        if business_class_seats_booked + new.seat_count > total_business_class_plane_seats then
+            raise exception '%', overbooking_error_msg;
+        end if;
+    elsif new.seat_type_id = 3 then -- First class seats
+        if first_class_seats_booked + new.seat_count > total_first_class_plane_seats then
+            raise exception '%', overbooking_error_msg;
+        end if;
+    end if;
+
+    return new;
+end;
+$$;
+
+create or replace trigger check_overbooking_limit
+before insert on airline_booking2.reservation for each row
+execute function enforce_overbooking_limit();
+
