@@ -18,7 +18,7 @@ public class FlightDataGenerator
     {
         for (int i = 0; i < iterations; i++)
         {
-            Console.WriteLine("Completed Phase: ");
+            Console.Write("\nCompleted Phase: ");
             await GenerateSingleDay(numProducts);
             Console.WriteLine($"Done with day: {i + 1}/{iterations}");
         }
@@ -42,7 +42,7 @@ public class FlightDataGenerator
 
         // Data Generation Chain 2 (A LOT SIMPLER)
         await GenerateConcessionPurchases(seatIds, numProducts);
-        Console.Write("6");
+        Console.Write("6\n");
     }
 
     // Generate a given number of fake passengers
