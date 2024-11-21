@@ -26,24 +26,6 @@ $$ language plpgsql;
 
 select * from flight_performance_efficiency();
 
--- schedule_flight procedure
--- unimplemented
-create or replace procedure schedule_flight
-(departure_time timestamp, arrival_time timestamp, plane_id int, departure_airport_id int, arrival_airport_id int, overbooking_id int) 
-as $$
-	declare
-		flightId int;
-	begin
-		insert into airline_booking2.scheduled_flight 
-		(departure_time, arrival_time, plane_id, departure_airport_id, arrival_airport_id, overbooking_id)
-		values departure_time, arrival_time, plane_id, departure_airport_id, overbooking_id;
-		call --procedure to check flight chains
-	exception
-		when invalid_flight then
-			raise notice 'plane not available in those locations'
-			delete from airline_booking2.scheduled_flight where id = flightId;
-	end;
-$$ language plpgsql;
 
 -- flight continuity procedure
 -- makes sure planes aren't teleporting between flights
