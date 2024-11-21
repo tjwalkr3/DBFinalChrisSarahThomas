@@ -363,31 +363,31 @@ create or replace trigger check_overbooking_limit
 before insert on airline_booking2.reservation for each row
 execute function enforce_overbooking_limit();
 
--- flight performance function
--- calculates percentages based on the flights that have been canceled
-create or replace function flight_performance_efficiency() returns table(percent_flights_on_time int, percent_flights_canceled int) as $$
-	begin
-	return query with flight_counts as (
-	select 
-		count(*) as total_flights,
-		sum(case 
-				when fh.actual_departure_time is null and fh.actual_arrival_time is null then 1 
-				else 0 
-			end
-		) as canceled_flights,
-		sum(case 
-				when fh.actual_departure_time is not null and fh.actual_arrival_time is not null then 1  
-				else 0 
-			end
-		) as on_time_flights
-	from airline_booking2.flight_history fh
-	)
-	select 
-		(coalesce(on_time_flights, 0) * 100.0 / coalesce(total_flights, 1))::int as percent_flights_on_time,
-		(coalesce(canceled_flights, 0) * 100.0 / coalesce(total_flights, 1))::int as percent_flights_canceled
-	from flight_counts;
-	end;
-$$ language plpgsql;
+-- Flight performance function
+-- Calculates percentages based on the flights that have been canceled
+CREATE OR REPLACE FUNCTION flight_performance_efficiency() 
+RETURNS TABLE(percent_flights_on_time INT, percent_flights_canceled INT) AS $$
+BEGIN
+    RETURN QUERY
+    WITH flight_counts AS (
+        SELECT 
+            COUNT(*) AS total_flights,
+            SUM(CASE 
+                    WHEN fh.actual_departure_time IS NULL AND fh.actual_arrival_time IS NULL THEN 1
+                    ELSE 0
+                END) AS canceled_flights,
+            SUM(CASE 
+                    WHEN fh.actual_departure_time IS NOT NULL AND fh.actual_arrival_time IS NOT NULL THEN 1
+                    ELSE 0
+                END) AS on_time_flights
+        FROM airline_booking2.flight_history fh
+    )
+    SELECT 
+        (COALESCE(on_time_flights, 0) * 100.0 / COALESCE(total_flights, 1))::INT AS percent_flights_on_time,
+        (COALESCE(canceled_flights, 0) * 100.0 / COALESCE(total_flights, 1))::INT AS percent_flights_canceled
+    FROM flight_counts;
+END;
+$$ LANGUAGE plpgsql;
 
 -- flight continuity procedure
 -- makes sure planes aren't teleporting between flights
