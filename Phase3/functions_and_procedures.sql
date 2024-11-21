@@ -26,25 +26,6 @@ $$ language plpgsql;
 
 select * from flight_performance_efficiency();
 
--- schedule_flight procedure
--- unimplemented
-create or replace procedure schedule_flight
-(departure_time timestamp, arrival_time timestamp, plane_id int, departure_airport_id int, arrival_airport_id int, overbooking_id int) 
-as $$
-	declare
-		flightId int;
-	begin
-		insert into airline_booking2.scheduled_flight 
-		(departure_time, arrival_time, plane_id, departure_airport_id, arrival_airport_id, overbooking_id)
-		values departure_time, arrival_time, plane_id, departure_airport_id, overbooking_id;
-		--procedure to check flight chains
-	exception
-		when invalid_flight then
-			raise notice 'plane not available in those locations'
-			delete from airline_booking2.scheduled_flight where id = flightId;
-	end;
-$$ language plpgsql;
-
 -- flight continuity procedure
 -- makes sure planes aren't teleporting between flights
 CREATE OR REPLACE PROCEDURE flight_continuity ()
@@ -85,3 +66,59 @@ END;
 $$;
 
 CALL flight_continuity();
+
+-- scheduled_flight insert procedure
+-- make sure that the departure airport of the flight being inserted is the same as the arrival airport of the last flight
+CREATE OR REPLACE PROCEDURE insert_scheduled_flight(new_flight RECORD)
+LANGUAGE plpgsql AS $$
+DECLARE
+    last_flight RECORD; -- To hold the most recent flight for the plane
+BEGIN
+    -- Fetch the most recent flight for the given plane
+    SELECT *
+    INTO last_flight
+    FROM airline_booking2.scheduled_flight
+    WHERE plane_id = new_flight.plane_id
+    ORDER BY departure_time DESC
+    LIMIT 1;
+
+    -- Perform the continuity check if a previous flight exists
+    IF last_flight IS NOT NULL THEN
+        IF last_flight.arrival_airport_id != new_flight.departure_airport_id THEN
+            RAISE EXCEPTION 'Continuity check failed: Last arrival airport (ID=%) does not match current departure airport (ID=%)',
+                            last_flight.arrival_airport_id, new_flight.departure_airport_id;
+        END IF;
+    END IF;
+
+    -- Insert the new scheduled flight into the database
+    INSERT INTO airline_booking2.scheduled_flight (
+        departure_time,
+        arrival_time,
+        plane_id,
+        departure_airport_id,
+        arrival_airport_id,
+        overbooking_id
+    )
+    VALUES (
+        new_flight.departure_time,
+        new_flight.arrival_time,
+        new_flight.plane_id,
+        new_flight.departure_airport_id,
+        new_flight.arrival_airport_id,
+        new_flight.overbooking_id
+    );
+END;
+$$;
+
+CREATE TYPE scheduled_flight_type AS (
+    departure_time timestamp,
+    arrival_time timestamp,
+    plane_id int,
+    departure_airport_id int,
+    arrival_airport_id int,
+    overbooking_id int
+);
+
+CALL insert_scheduled_flight(
+    ROW('2024-11-21 08:00'::timestamp, '2024-11-21 10:00'::timestamp, 2, 5, 10, 1)::scheduled_flight_type
+);
