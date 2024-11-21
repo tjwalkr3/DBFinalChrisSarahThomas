@@ -235,7 +235,7 @@ values (1, 1, 200.00, 1, 1),
 	(7, 9, 200.00, 1, 1),
 	(6, 9, 200.00, 1, 1);
 
-INSERT INTO airline_booking2.seat (reservation_id, seat_type_id, printed_boarding_pass_at, seat_number, passenger_id) VALUES 
+INSERT INTO airline_booking2.seat (reservation_id, printed_boarding_pass_at, seat_number, passenger_id) VALUES 
     (1, '2024-08-16 02:30:00', 1, 1),
     (1, '2024-08-16 02:31:00', 2, 4),
     (2, '2024-08-16 04:53:00', 3, 2),
@@ -472,6 +472,7 @@ END;
 $$;
 
 -- Create a type for inserting into scheduled_flight using the insert_scheduled_flight method
+drop type if exists scheduled_flight_type;
 CREATE TYPE scheduled_flight_type AS (
     departure_time timestamp,
     arrival_time timestamp,
@@ -490,8 +491,8 @@ create view plane_total_flight_time as
 		p.id plane_id,
 		sum(age(fh.actual_arrival_time, fh.actual_departure_time)) total_hours_flight_time
 	from
-	flight_history fh
-	inner join plane p on (p.id = fh.plane_id)
+	airline_booking2.flight_history fh
+	inner join airline_booking2.plane p on (p.id = fh.plane_id)
 	where (fh.actual_departure_time is not null and fh.actual_arrival_time is not null)
 	group by p.id
 	order by p.id;
@@ -506,11 +507,12 @@ create view customer_flight_expenses as
 		aa.code arrival_airport_code,
 		sum(pay.amount) amount_spent
 	from 
-	payment pay
-	inner join reservation r on (pay.reservation_id = r.id)
-	inner join scheduled_flight sf on (sf.id = r.scheduled_flight_id)
-	inner join passenger p on (p.id = r.passenger_id)
-	inner join airport ad on (ad.id = sf.departure_airport_id)
-	inner join airport aa on (aa.id = sf.arrival_airport_id)
+	airline_booking2.payment pay
+	inner join airline_booking2.reservation r on (pay.reservation_id = r.id)
+	inner join airline_booking2.scheduled_flight sf on (sf.id = r.scheduled_flight_id)
+	inner join airline_booking2.passenger p on (p.id = r.passenger_id)
+	inner join airline_booking2.airport ad on (ad.id = sf.departure_airport_id)
+	inner join airline_booking2.airport aa on (aa.id = sf.arrival_airport_id)
 	group by p.id, p.passenger_name, sf.plane_id, flight_departure_date, departure_airport_code, arrival_airport_code
 	order by passenger_name asc;
+
