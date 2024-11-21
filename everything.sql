@@ -1,6 +1,10 @@
 drop schema if exists airline_booking2 cascade;
 create schema airline_booking2;
 
+---------------------------------------------------------------
+-- Create Tables
+---------------------------------------------------------------
+
 create table airline_booking2.passenger (
 	id int primary key generated always as identity,
 	passenger_name varchar(100) not null, 
@@ -112,6 +116,10 @@ create table airline_booking2.concession_purchase_product (
 	constraint fk_concession_purchase_id foreign key (concession_purchase_id) references airline_booking2.concession_purchase(id)
 );
 
+---------------------------------------------------------------
+-- Sample Data
+---------------------------------------------------------------
+
 INSERT INTO airline_booking2.plane_type (plane_name) values 
 	('Boeing 737-200'),
     ('Boeing 737-220'),
@@ -195,7 +203,7 @@ insert into airline_booking2.product (concession_name, price) values
 -- WHERE (departure_time IS NOT NULL AND arrival_time IS NOT NULL);
 
 ---------------------------------------------------------------
--- Functions and Procedures
+-- Functions, Procedures, and Triggers
 ---------------------------------------------------------------
 
 -- Enforce the overbooking limit by getting the plane capacities and comparing them with the number of reservations
@@ -405,3 +413,36 @@ CREATE TYPE scheduled_flight_type AS (
     overbooking_id int
 );
 
+---------------------------------------------------------------
+-- Views
+---------------------------------------------------------------
+
+create view plane_total_flight_time as
+	select
+		p.id plane_id,
+		sum(age(fh.actual_arrival_time, fh.actual_departure_time)) total_hours_flight_time
+	from
+	flight_history fh
+	inner join plane p on (p.id = fh.plane_id)
+	where (fh.actual_departure_time is not null and fh.actual_arrival_time is not null)
+	group by p.id
+	order by p.id;
+
+create view customer_flight_expenses as
+	select 
+		p.id passenger_id,
+		p.passenger_name,
+		sf.departure_time::date flight_departure_date,
+		sf.plane_id,
+		ad.code departure_airport_code,
+		aa.code arrival_airport_code,
+		sum(pay.amount) amount_spent
+	from 
+	payment pay
+	inner join reservation r on (pay.reservation_id = r.id)
+	inner join scheduled_flight sf on (sf.id = r.scheduled_flight_id)
+	inner join passenger p on (p.id = r.passenger_id)
+	inner join airport ad on (ad.id = sf.departure_airport_id)
+	inner join airport aa on (aa.id = sf.arrival_airport_id)
+	group by p.id, p.passenger_name, sf.plane_id, flight_departure_date, departure_airport_code, arrival_airport_code
+	order by passenger_name asc;
