@@ -37,7 +37,7 @@ as $$
 		insert into airline_booking2.scheduled_flight 
 		(departure_time, arrival_time, plane_id, departure_airport_id, arrival_airport_id, overbooking_id)
 		values departure_time, arrival_time, plane_id, departure_airport_id, overbooking_id;
-		call --procedure to check flight chains
+		--procedure to check flight chains
 	exception
 		when invalid_flight then
 			raise notice 'plane not available in those locations'
