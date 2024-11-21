@@ -44,3 +44,44 @@ as $$
 			delete from airline_booking2.scheduled_flight where id = flightId;
 	end;
 $$ language plpgsql;
+
+-- flight continuity procedure
+-- makes sure planes aren't teleporting between flights
+CREATE OR REPLACE PROCEDURE flight_continuity ()
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    current_row RECORD;
+    -- Variable to hold each row during iteration
+    last_row RECORD;
+    -- Variable to store the last row
+BEGIN
+    FOR current_row IN
+    SELECT
+        id,
+        departure_airport_id,
+        arrival_airport_id,
+        plane_id
+    FROM
+        airline_booking2.scheduled_flight
+    ORDER BY
+        plane_id ASC,
+        departure_time ASC -- Ensure rows are processed in a defined order
+        LOOP
+            -- If last_row is not null, perform the comparison
+            IF last_row IS NOT NULL THEN
+                IF last_row.arrival_airport_id = current_row.departure_airport_id THEN
+                    --RAISE NOTICE 'Row continuity check passed: Plane ID=%, Last Arrival=%, Current Departure=%', last_row.plane_id, last_row.arrival_airport_id, current_row.departure_airport_id;
+                ELSIF last_row.plane_id != current_row.plane_id THEN
+                    --RAISE NOTICE 'Row continuity check passed: new plane: Plane ID=%, Departure=%', last_row.plane_id, current_row.departure_airport_id;
+                ELSE
+                    RAISE WARNING 'Row continuity check failed: Flight ID=%, Last Arrival=%, Current Departure=%', current_row.id, last_row.arrival_airport_id, current_row.departure_airport_id;
+                END IF;
+            END IF;
+            -- Update last_row to hold the current_row for the next iteration
+            last_row := current_row;
+        END LOOP;
+END;
+$$;
+
+CALL flight_continuity();
