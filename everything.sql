@@ -429,6 +429,7 @@ INSERT INTO airline_booking.product (concession_name, price)
 -- Views
 ---------------------------------------------------------------
 
+-- a view to get the total flight time for every plane
 CREATE VIEW plane_total_flight_time AS
 SELECT
     p.id plane_id,
@@ -443,6 +444,8 @@ GROUP BY
 ORDER BY
     p.id;
 
+-- a view to get the expenses for each passenger on a flight
+-- (passengers have multiple entries if they took multiple flights)
 CREATE VIEW customer_flight_expenses AS
 SELECT
     p.id passenger_id,
