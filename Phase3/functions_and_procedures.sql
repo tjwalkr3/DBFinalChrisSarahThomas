@@ -1,4 +1,4 @@
--- flight performance function
+-- flight performance efficiency function
 -- calculates percentages based on the flights that have been canceled
 create or replace function flight_performance_efficiency() returns table(percent_flights_on_time int, percent_flights_canceled int) as $$
 	begin

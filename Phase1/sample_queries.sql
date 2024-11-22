@@ -172,7 +172,7 @@ begin
 
         (startdate + interval '10 days')::date as end_date,
 
-        sum(p.amount)::decimal(5,2) as revenue
+        sum(p.amount)::decimal(10,2) as revenue
     from airline_booking2.scheduled_flight sf
     inner join airline_booking2.reservation r
         on sf.id = r.scheduled_flight_id
