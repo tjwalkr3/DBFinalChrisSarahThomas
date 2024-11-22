@@ -1,6 +1,6 @@
 -- flight performance efficiency function
 -- calculates percentages based on the flights that have been canceled
-create or replace function flight_performance_efficiency() returns table(percent_flights_on_time int, percent_flights_canceled int) as $$
+create or replace function flight_performance_efficiency() returns table(percent_flights_on_time decimal(10,6), percent_flights_canceled decimal(10,6)) as $$
 	begin
 	return query with flight_counts as (
 	select 
@@ -18,8 +18,8 @@ create or replace function flight_performance_efficiency() returns table(percent
 	from airline_booking2.flight_history fh
 	)
 	select 
-		(coalesce(on_time_flights, 0) * 100.0 / coalesce(total_flights, 1))::int as percent_flights_on_time,
-		(coalesce(canceled_flights, 0) * 100.0 / coalesce(total_flights, 1))::int as percent_flights_canceled
+		(coalesce(on_time_flights, 0) * 100.0 / coalesce(total_flights, 1))::decimal(10,6) as percent_flights_on_time,
+		(coalesce(canceled_flights, 0) * 100.0 / coalesce(total_flights, 1))::decimal(10,6) as percent_flights_canceled
 	from flight_counts;
 	end;
 $$ language plpgsql;
