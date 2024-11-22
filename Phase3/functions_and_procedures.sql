@@ -28,14 +28,14 @@ select * from flight_performance_efficiency();
 
 -- Flight Estimations Query/Function
 -- Calculates the expected revenue within a 10 day interval after a given startdate
-create or replace function flight_estimate(startdate date) 
+create or replace function flight_revenue_estimate(startdate date) 
 returns table(start_date date, end_date date, revenue decimal(10,2)) as $$
 begin
     return query 
     select
         (select min(departure_time)::date 
          from airline_booking2.scheduled_flight 
-         where departure_time >= flight_estimate.startdate) as start_date,
+         where departure_time >= flight_revenue_estimate.startdate) as start_date,
 
         (startdate + interval '10 days')::date as end_date,
 
@@ -45,7 +45,7 @@ begin
         on sf.id = r.scheduled_flight_id
     inner join airline_booking2.payment p
         on r.id = p.reservation_id
-    where sf.departure_time >= flight_estimate.startdate
+    where sf.departure_time >= flight_revenue_estimate.startdate
       and sf.arrival_time < (startdate + interval '10 days')
     group by start_date, end_date; -- Group by to return correct aggregates
 end;
