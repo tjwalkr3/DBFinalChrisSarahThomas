@@ -162,7 +162,7 @@ order by flight_id asc;
 
 -- Flight Estimations Query/Function
 create or replace function flight_estimate(startdate date) 
-returns table(start_date date, end_date date, revenue decimal(5,2)) as $$
+returns table(start_date date, end_date date, revenue decimal(10,2)) as $$
 begin
     return query 
     select
