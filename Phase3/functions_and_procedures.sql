@@ -1,6 +1,6 @@
 -- flight performance efficiency function
 -- calculates percentages based on the flights that have been canceled
-create or replace function flight_performance_efficiency() returns table(percent_flights_on_time decimal(5,2), percent_flights_canceled decimal(5,2)) as $$
+create or replace function flight_performance_efficiency() returns table(percent_flights_on_time decimal(10,6), percent_flights_canceled decimal(10,6)) as $$
 	begin
 	return query with flight_counts as (
 	select 
@@ -18,8 +18,8 @@ create or replace function flight_performance_efficiency() returns table(percent
 	from airline_booking2.flight_history fh
 	)
 	select 
-		(coalesce(on_time_flights, 0) * 100.0 / coalesce(total_flights, 1))::decimal(5,2) as percent_flights_on_time,
-		(coalesce(canceled_flights, 0) * 100.0 / coalesce(total_flights, 1))::decimal(5,2) as percent_flights_canceled
+		(coalesce(on_time_flights, 0) * 100.0 / coalesce(total_flights, 1))::decimal(10,6) as percent_flights_on_time,
+		(coalesce(canceled_flights, 0) * 100.0 / coalesce(total_flights, 1))::decimal(10,6) as percent_flights_canceled
 	from flight_counts;
 	end;
 $$ language plpgsql;
@@ -28,14 +28,14 @@ select * from flight_performance_efficiency();
 
 -- Flight Estimations Query/Function
 -- Calculates the expected revenue within a 10 day interval after a given startdate
-create or replace function flight_estimate(startdate date) 
+create or replace function flight_revenue_estimate(startdate date) 
 returns table(start_date date, end_date date, revenue decimal(10,2)) as $$
 begin
     return query 
     select
         (select min(departure_time)::date 
          from airline_booking2.scheduled_flight 
-         where departure_time >= flight_estimate.startdate) as start_date,
+         where departure_time >= flight_revenue_estimate.startdate) as start_date,
 
         (startdate + interval '10 days')::date as end_date,
 
@@ -45,7 +45,7 @@ begin
         on sf.id = r.scheduled_flight_id
     inner join airline_booking2.payment p
         on r.id = p.reservation_id
-    where sf.departure_time >= flight_estimate.startdate
+    where sf.departure_time >= flight_revenue_estimate.startdate
       and sf.arrival_time < (startdate + interval '10 days')
     group by start_date, end_date; -- Group by to return correct aggregates
 end;
